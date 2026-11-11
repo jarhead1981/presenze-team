@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PresenzeTeam - Cloud Sincronizzato</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter & Icone Lucide -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK (Compat Version per semplicità in un singolo file HTML) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7fc; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-md">
+                    <i data-lucide="clock" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-900 leading-tight">PresenzeTeam</h1>
+                    <p class="text-xs text-slate-500">Sincronizzazione Cloud in tempo reale</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="firebase-status" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Firebase da configurare
+                </span>
+                <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-sm font-medium transition-colors flex items-center space-x-1.5">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Configura Firebase</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Sidebar -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Identificazione</h2>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Seleziona il tuo nome:</label>
+                <select id="colleague-select" onchange="cambiaUtente()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none mb-4">
+                    <option value="Marco Lotti">Marco Lotti</option>
+                    <option value="Luana Andreoni">Luana Andreoni</option>
+                    <option value="Maria Rossi">Maria Rossi</option>
+                    <option value="Giuseppe Verdi">Giuseppe Verdi</option>
+                </select>
+
+                <!-- Cronometro / Timbratura -->
+                <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-xl text-center relative overflow-hidden mt-6">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-indigo-500/20 rounded-full blur-xl"></div>
+                    <p class="text-xs font-medium text-indigo-200 uppercase tracking-widest mb-1">Timbratura Presenza</p>
+                    <div id="timer-display" class="text-4xl font-mono font-bold tracking-tight my-3">00:00:00</div>
+                    <p id="timer-status" class="text-xs text-indigo-300 mb-5">Stato: Pronto</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-start" onclick="avviaTimbratura()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2.5 px-4 rounded-xl text-sm transition-all shadow-md flex items-center justify-center space-x-1.5">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                            <span>Entra</span>
+                        </button>
+                        <button id="btn-stop" onclick="fermaTimbratura()" disabled class="bg-slate-700/60 text-slate-300 font-medium py-2.5 px-4 rounded-xl text-sm transition-all disabled:opacity-50 flex items-center justify-center space-x-1.5">
+                            <i data-lucide="square" class="w-4 h-4"></i>
+                            <span>Esci</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget Eventi -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Prossimi Eventi</h2>
+                    <i data-lucide="calendar-days" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 flex items-start space-x-3">
+                    <div class="bg-indigo-600 text-white p-2 rounded-lg mt-0.5">
+                        <i data-lucide="trophy" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">Torneo di Padel aziendale</p>
+                        <p class="text-xs text-slate-500 mt-0.5">25 Marzo - 28 Marzo • Piste di av. Burgos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione Centrale: Tabella e Registro -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex items-center justify-between pb-6 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Pianificazione Orario Settimanale</h2>
+                        <p class="text-sm text-slate-500">I dati vengono salvati nel Cloud Firebase e condivisi con il team</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto mt-6">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="pb-3 px-3">Giorno</th>
+                                <th class="pb-3 px-3">Mattina</th>
+                                <th class="pb-3 px-3">Pomeriggio</th>
+                                <th class="pb-3 px-3 text-right">Totale</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orari-table-body" class="divide-y divide-slate-50 text-sm"></tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button onclick="salvaOrariCloud()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center space-x-2">
+                        <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+                        <span>Salva Orari su Firebase</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registro Attività Cloud -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 class="text-lg font-bold text-slate-900 mb-4">Registro Presenze in Tempo Reale</h2>
+                <div id="registro-presenze" class="space-y-3">
+                    <p class="text-sm text-slate-400 italic">Caricamento presenze dal cloud...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Configurazione Firebase -->
+    <div id="config-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-slate-900">Configurazione Firebase (Gratuito)</h3>
+            <p class="text-xs text-slate-500">Incolla qui sotto gli oggetti di configurazione presi dalla console di Firebase (Project Settings -> General -> Web App).</p>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Firebase Config (JSON o codice JS)</label>
+                <textarea id="firebase-config-input" rows="6" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder='{
+  apiKey: "TUA_API_KEY",
+  authDomain: "tuo-app.firebaseapp.com",
+  projectId: "tuo-app",
+  storageBucket: "tuo-app.appspot.com",
+  messagingSenderId: "123456",
+  appId: "1:123:web:abc"
+}'></textarea>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="chiudiConfigModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Annulla</button>
+                <button onclick="salvaConfigFirebase()" class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md">Salva e Connetti</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logica e Firebase -->
+    <script>
+        lucide.createIcons();
+
+        const giorniSettimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+        let datiOrari = {
+            'Lunedì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30' },
+            'Martedì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30' },
+            'Mercoledì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30' },
+            'Giovedì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30' },
+            'Venerdì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30' },
+            'Sabato': { mIn: '', mOut: '', pIn: '', pOut: '' },
+            'Domenica': { mIn: '', mOut: '', pIn: '', pOut: '' }
+        };
+
+        let db = null;
+        let timerInterval = null;
+        let secondiTrascorsi = 0;
+        let inServizio = false;
+
+        // Inizializzazione localStorage per config firebase
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedConfig = localStorage.getItem('firebase_config_json');
+            if (savedConfig) {
+                try {
+                    const configObj = JSON.parse(savedConfig);
+                    inizializzaFirebase(configObj);
+                } catch(e) {}
+            }
+            costruisciTabella();
+        });
+
+        function apriConfigModal() {
+            document.getElementById('config-modal').classList.remove('hidden');
+            const current = localStorage.getItem('firebase_config_json');
+            if (current) document.getElementById('firebase-config-input').value = current;
+        }
+
+        function chiudiConfigModal() {
+            document.getElementById('config-modal').classList.add('hidden');
+        }
+
+        function salvaConfigFirebase() {
+            let raw = document.getElementById('firebase-config-input').value.trim();
+            // Pulisci eventuale assegnazione const firebaseConfig = ...
+            raw = raw.replace(/const\s+firebaseConfig\s*=\s*/, '').replace(/;$/, '');
+            try {
+                const configObj = JSON.parse(raw);
+                localStorage.setItem('firebase_config_json', JSON.stringify(configObj));
+                chiudiConfigModal();
+                inizializzaFirebase(configObj);
+                alert('Configurazione salvata con successo!');
+            } catch(e) {
+                alert('Formato JSON non valido. Controlla di aver incollato correttamente la configurazione.');
+            }
+        }
+
+        function inizializzaFirebase(config) {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(config);
+                }
+                db = firebase.firestore();
+                document.getElementById('firebase-status').innerHTML = `
+                    <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full"></span> Connesso a Firebase
+                `;
+                document.getElementById('firebase-status').className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800";
+                
+                ascoltaDatiCloud();
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function costruisciTabella() {
+            const tbody = document.getElementById('orari-table-body');
+            tbody.innerHTML = '';
+            giorniSettimana.forEach(giorno => {
+                let d = datiOrari[giorno] || { mIn:'', mOut:'', pIn:'', pOut:'' };
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3.5 px-3 font-medium text-slate-700">${giorno}</td>
+                    <td class="py-3.5 px-3">
+                        <div class="flex items-center space-x-2">
+                            <input type="time" value="${d.mIn}" id="${giorno}-mIn" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                            <span class="text-slate-400">-</span>
+                            <input type="time" value="${d.mOut}" id="${giorno}-mOut" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-3">
+                        <div class="flex items-center space-x-2">
+                            <input type="time" value="${d.pIn}" id="${giorno}-pIn" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                            <span class="text-slate-400">-</span>
+                            <input type="time" value="${d.pOut}" id="${giorno}-pOut" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-3 text-right font-mono text-xs font-semibold text-slate-600">8h 00m</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function aggiornaUIOrari() {
+            giorniSettimana.forEach(giorno => {
+                let d = datiOrari[giorno];
+                if (d) {
+                    if(document.getElementById(`${giorno}-mIn`)) document.getElementById(`${giorno}-mIn`).value = d.mIn || '';
+                    if(document.getElementById(`${giorno}-mOut`)) document.getElementById(`${giorno}-mOut`).value = d.mOut || '';
+                    if(document.getElementById(`${giorno}-pIn`)) document.getElementById(`${giorno}-pIn`).value = d.pIn || '';
+                    if(document.getElementById(`${giorno}-pOut`)) document.getElementById(`${giorno}-pOut`).value = d.pOut || '';
+                }
+            });
+        }
+
+        function salvaOrariCloud() {
+            giorniSettimana.forEach(giorno => {
+                datiOrari[giorno] = {
+                    mIn: document.getElementById(`${giorno}-mIn`).value,
+                    mOut: document.getElementById(`${giorno}-mOut`).value,
+                    pIn: document.getElementById(`${giorno}-pIn`).value,
+                    pOut: document.getElementById(`${giorno}-pOut`).value
+                };
+            });
+
+            if (!db) {
+                // Fallback LocalStorage se Firebase non è configurato
+                localStorage.setItem('orari_team', JSON.stringify(datiOrari));
+                alert('Salvato in Locale (Configura Firebase per condividere online)');
+                return;
+            }
+
+            db.collection("impostazioni").doc("orari_settimanali").set(datiOrari)
+              .then(() => alert('Orari salvati con successo su Firebase!'))
+              .catch(err => alert('Errore salvataggio: ' + err.message));
+        }
+
+        function ascoltaDatiCloud() {
+            if (!db) return;
+            // Ascolta modifiche orari in tempo reale
+            db.collection("impostazioni").doc("orari_settimanali").onSnapshot((doc) => {
+                if (doc.exists) {
+                    datiOrari = doc.data();
+                    aggiornaUIOrari();
+                }
+            });
+
+            // Ascolta registro presenze
+            db.collection("registro").orderBy("timestamp", "desc").limit(10).onSnapshot((snapshot) => {
+                let html = '';
+                snapshot.forEach(doc => {
+                    let item = doc.data();
+                    html += `
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 text-sm">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center font-bold text-xs justify-center">
+                                    ${item.utente.charAt(0)}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800">${item.utente}</p>
+                                    <p class="text-xs text-slate-500">${item.dettagli}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-slate-400">${item.dataString}</span>
+                        </div>
+                    `;
+                });
+                document.getElementById('registro-presenze').innerHTML = html || '<p class="text-sm text-slate-400 italic">Nessuna attività recente.</p>';
+            });
+        }
+
+        function avviaTimbratura() {
+            if (inServizio) return;
+            inServizio = true;
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-start').classList.add('opacity-50');
+            document.getElementById('btn-stop').disabled = false;
+            document.getElementById('btn-stop').classList.remove('bg-slate-700/60');
+            document.getElementById('btn-stop').classList.add('bg-rose-600', 'hover:bg-rose-700');
+            document.getElementById('timer-status').innerText = "Stato: In servizio";
+
+            timerInterval = setInterval(() => {
+                secondiTrascorsi++;
+                let ore = Math.floor(secondiTrascorsi / 3600).toString().padStart(2, '0');
+                let min = Math.floor((secondiTrascorsi % 3600) / 60).toString().padStart(2, '0');
+                let sec = (secondiTrascorsi % 60).toString().padStart(2, '0');
+                document.getElementById('timer-display').innerText = `${ore}:${min}:${sec}`;
+            }, 1000);
+        }
+
+        function fermaTimbratura() {
+            if (!inServizio) return;
+            clearInterval(timerInterval);
+            inServizio = false;
+
+            const utente = document.getElementById('colleague-select').value;
+            const tempoTotale = document.getElementById('timer-display').innerText;
+
+            const logEntry = {
+                utente: utente,
+                dettagli: `Turno completato (${tempoTotale})`,
+                dataString: new Date().toLocaleString(),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            if (db) {
+                db.collection("registro").add(logEntry)
+                  .catch(err => console.error("Errore salvataggio log", err));
+            }
+
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-start').classList.remove('opacity-50');
+            document.getElementById('btn-stop').disabled = true;
+            document.getElementById('btn-stop').classList.add('bg-slate-700/60');
+            document.getElementById('btn-stop').classList.remove('bg-rose-600', 'hover:bg-rose-700');
+            document.getElementById('timer-status').innerText = "Stato: Completato";
+            secondiTrascorsi = 0;
+            document.getElementById('timer-display').innerText = "00:00:00";
+        }
+    </script>
+</body>
+</html>
