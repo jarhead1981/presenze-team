@@ -241,18 +241,17 @@
         </div>
     </div>
 
-    <!-- Modal login -->
-    <div id="modal-login" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-slate-900">Accedi al team</h3>
-            <p class="text-xs text-slate-500">Usa l'account creato per te nella console Firebase. I dati si sincronizzano in tempo reale.</p>
-            <input type="email" id="login-email" autocomplete="username" placeholder="Email" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <input type="password" id="login-password" autocomplete="current-password" placeholder="Password" onkeydown="if(event.key==='Enter')accedi()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <p id="login-errore" class="text-xs text-rose-600 min-h-[1rem]"></p>
-            <div class="flex items-center justify-between">
-                <button onclick="chiudiLogin()" class="text-xs text-slate-500 hover:underline">Continua in locale</button>
-                <button onclick="accedi()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded-xl text-sm">Accedi</button>
+    <!-- Modal login (solo password) -->
+    <div id="modal-login" class="fixed inset-0 bg-slate-100 z-[60] flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl border border-slate-100 space-y-5 text-center">
+            <div class="mx-auto bg-indigo-600 text-white w-12 h-12 rounded-2xl shadow-md flex items-center justify-center text-xl">🔒</div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">PresenzeTeam</h3>
+                <p class="text-xs text-slate-500 mt-1">Inserisci la password del team per continuare.</p>
             </div>
+            <input type="password" id="login-password" autocomplete="current-password" placeholder="Password" onkeydown="if(event.key==='Enter')accedi()" class="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <p id="login-errore" class="text-xs text-rose-600 min-h-[1rem]"></p>
+            <button onclick="accedi()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-colors">Entra</button>
         </div>
     </div>
 
@@ -261,7 +260,31 @@
            Incolla qui l'oggetto firebaseConfig del tuo progetto, ad esempio:
            const FIREBASE_CONFIG = { apiKey: "...", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..." };
            Lascia null per lavorare solo in locale. */
-        const FIREBASE_CONFIG = null;
+        const FIREBASE_CONFIG = // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBiLLvxM0Cxyp1E-3lSyrkKmsdCgcev65A",
+  authDomain: "presenze-team-9ec9f.firebaseapp.com",
+  databaseURL: "https://presenze-team-9ec9f-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "presenze-team-9ec9f",
+  storageBucket: "presenze-team-9ec9f.firebasestorage.app",
+  messagingSenderId: "850301455307",
+  appId: "1:850301455307:web:fa403a55c223785d05844e"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);;
+
+        /* Account condiviso del team: l'utente vede solo il campo password.
+           Crea in Firebase (Authentication > Users > Add user) un utente con QUESTA email
+           e la password che vuoi dare al team. Può essere un indirizzo inventato. */
+        const EMAIL_TEAM = 'presenze.team@example.com';
+        /* true = la password si chiede una volta per dispositivo; false = a ogni apertura (nuova scheda/finestra) */
+        const RICORDA_ACCESSO = true;
 
         /* ---------- Icone SVG inline (nessuna dipendenza esterna) ---------- */
         const ICONE = {
@@ -796,7 +819,7 @@
         }
 
         /* ---------- Firebase (Auth + Firestore) ---------- */
-        let db = null, auth = null, utenteCorrente = null, unsubRemoto = null, timerRemoto = null, statoSync = 'locale';
+        let db = null, auth = null, utenteCorrente = null, unsubRemoto = null, timerRemoto = null, statoSync = 'locale', ultimoErrore = '';
 
         function configFirebase() { return FIREBASE_CONFIG || leggi('firebase_config_json', null); }
 
@@ -812,32 +835,58 @@
             const el = document.getElementById('firebase-status');
             el.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ' + c;
             el.innerHTML = '<span class="w-2 h-2 mr-1.5 ' + dot + ' rounded-full"></span>' + txt;
+            el.title = stato === 'errore' ? ultimoErrore : '';
+        }
+
+        function erroreFirestore(e) {
+            console.error(e);
+            const m = {
+                'permission-denied': 'Permesso negato da Firestore. Controlla: 1) il database è stato creato; 2) le regole sono pubblicate; 3) hai fatto il login.',
+                'not-found': 'Database Firestore non trovato: crealo dalla console (Databases & Storage > Firestore).',
+                'failed-precondition': 'Database Firestore non ancora creato o non pronto.',
+                'unavailable': 'Firestore non raggiungibile: controlla la connessione.',
+                'unauthenticated': 'Sessione scaduta: esci e riaccedi.'
+            };
+            ultimoErrore = (m[e && e.code] || ('Errore Firestore: ' + (e && (e.code || e.message)))) ;
+            statoBadge('errore');
         }
 
         function clickBadge() {
+            if (statoSync === 'errore' && ultimoErrore) { alert(ultimoErrore); return; }
             if (!auth) { apriConfigModal(); return; }
             if (utenteCorrente) {
-                if (confirm('Uscire dall\'account ' + (utenteCorrente.email || '') + '?')) auth.signOut();
+                if (confirm('Vuoi bloccare l\'app su questo dispositivo? Servirà di nuovo la password.')) {
+                    auth.signOut().then(() => {
+                        ['team_colleghi', 'team_pianificazione', 'team_ferie_2027', 'team_giustificativi'].forEach(k => localStorage.removeItem(k));
+                        location.reload();
+                    });
+                }
             } else apriLogin();
         }
 
-        function apriLogin() { document.getElementById('modal-login').classList.remove('hidden'); }
+        function apriLogin() {
+            document.getElementById('modal-login').classList.remove('hidden');
+            setTimeout(() => document.getElementById('login-password').focus(), 50);
+        }
         function chiudiLogin() { document.getElementById('modal-login').classList.add('hidden'); }
 
         function accedi() {
-            const email = document.getElementById('login-email').value.trim();
             const pw = document.getElementById('login-password').value;
             const err = document.getElementById('login-errore');
             err.innerText = '';
-            if (!email || !pw) { err.innerText = 'Inserisci email e password.'; return; }
-            auth.signInWithEmailAndPassword(email, pw).catch(e => {
+            if (!pw) { err.innerText = 'Inserisci la password.'; return; }
+            auth.signInWithEmailAndPassword(EMAIL_TEAM, pw).then(() => {
+                document.getElementById('login-password').value = '';
+            }).catch(e => {
                 const m = {
-                    'auth/invalid-credential': 'Email o password errate.',
-                    'auth/invalid-email': 'Email non valida.',
+                    'auth/invalid-credential': 'Password errata (oppure l\'utente del team non è ancora stato creato nella console Firebase).',
+                    'auth/wrong-password': 'Password errata.',
+                    'auth/user-not-found': 'Utente del team non creato: aggiungilo in Authentication > Users.',
+                    'auth/invalid-email': 'EMAIL_TEAM nel file non è un indirizzo valido.',
                     'auth/too-many-requests': 'Troppi tentativi: riprova tra qualche minuto.',
                     'auth/network-request-failed': 'Connessione assente.',
                     'auth/operation-not-allowed': 'Accesso Email/Password non abilitato nella console Firebase.',
-                    'auth/unauthorized-domain': 'Dominio non autorizzato: aggiungilo in Authentication > Impostazioni.'
+                    'auth/unauthorized-domain': 'Dominio non autorizzato: aggiungilo in Authentication > Impostazioni > Domini autorizzati.'
                 };
                 err.innerText = m[e.code] || ('Errore: ' + e.code);
             });
@@ -849,6 +898,7 @@
             try {
                 if (!firebase.apps.length) firebase.initializeApp(cfg);
                 auth = firebase.auth();
+                auth.setPersistence(RICORDA_ACCESSO ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION).catch(() => {});
                 db = firebase.firestore();
                 statoBadge('login');
                 auth.onAuthStateChanged(u => {
@@ -887,7 +937,7 @@
                     renderTabellaFerie2027();
                     statoBadge('online');
                 } catch (e) { console.error(e); statoBadge('errore'); }
-            }, err => { console.error(err); statoBadge('errore'); });
+            }, erroreFirestore);
         }
 
         function programmaSalvataggioRemoto() {
@@ -902,7 +952,7 @@
                 dati: datiCorrenti(),
                 aggiornatoDa: utenteCorrente.email || '',
                 aggiornato: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => statoBadge('online')).catch(e => { console.error(e); statoBadge('errore'); });
+            }).then(() => statoBadge('online')).catch(erroreFirestore);
         }
 
         /* ---------- Avvio ---------- */
@@ -914,3 +964,4 @@
     </script>
 </body>
 </html>
+
