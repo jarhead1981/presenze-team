@@ -195,7 +195,7 @@
                 <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nuovo giustificativo</h4>
                 <div class="flex gap-2">
                     <input type="text" id="giust-emoji" maxlength="4" placeholder="🎓" class="w-16 text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <input type="text" id="giust-nome" maxlength="30" placeholder="Es. Formazione, Trasferta, Legge 104..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="giust-nome" maxlength="30" placeholder="Es. Formazione, Trasferta..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1.5">Colore</label>
@@ -231,7 +231,7 @@
 
             <div class="space-y-2 border-t border-slate-100 pt-4">
                 <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Firebase (opzionale)</h4>
-                <p class="text-xs text-slate-500">Incolla la configurazione web app del tuo progetto (oppure scrivila nella costante FIREBASE_CONFIG in cima allo script del file, così i colleghi non devono farlo).</p>
+                <p class="text-xs text-slate-500">Incolla la configurazione web app del tuo progetto se vuoi cambiarla al volo.</p>
                 <textarea id="firebase-config-input" rows="5" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "...", ... };'></textarea>
                 <div class="flex justify-end space-x-3">
                     <button onclick="chiudiConfigModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Chiudi</button>
@@ -256,37 +256,21 @@
     </div>
 
     <script>
-        /* ===== CONFIGURAZIONE FIREBASE =====
-           Incolla qui l'oggetto firebaseConfig del tuo progetto, ad esempio:
-           const FIREBASE_CONFIG = { apiKey: "...", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..." };
-           Lascia null per lavorare solo in locale. */
-        const FIREBASE_CONFIG = // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+        /* ===== CONFIGURAZIONE FIREBASE ===== */
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyBiLLvxM0Cxyp1E-3lSyrkKmsdCgcev65A",
+            authDomain: "presenze-team-9ec9f.firebaseapp.com",
+            databaseURL: "https://presenze-team-9ec9f-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "presenze-team-9ec9f",
+            storageBucket: "presenze-team-9ec9f.firebasestorage.app",
+            messagingSenderId: "850301455307",
+            appId: "1:850301455307:web:fa403a55c223785d05844e"
+        };
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBiLLvxM0Cxyp1E-3lSyrkKmsdCgcev65A",
-  authDomain: "presenze-team-9ec9f.firebaseapp.com",
-  databaseURL: "https://presenze-team-9ec9f-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "presenze-team-9ec9f",
-  storageBucket: "presenze-team-9ec9f.firebasestorage.app",
-  messagingSenderId: "850301455307",
-  appId: "1:850301455307:web:fa403a55c223785d05844e"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);;
-
-        /* Account condiviso del team: l'utente vede solo il campo password.
-           Crea in Firebase (Authentication > Users > Add user) un utente con QUESTA email
-           e la password che vuoi dare al team. Può essere un indirizzo inventato. */
         const EMAIL_TEAM = 'presenze.team@example.com';
-        /* true = la password si chiede una volta per dispositivo; false = a ogni apertura (nuova scheda/finestra) */
         const RICORDA_ACCESSO = true;
 
-        /* ---------- Icone SVG inline (nessuna dipendenza esterna) ---------- */
+        /* ---------- Icone SVG inline ---------- */
         const ICONE = {
             'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
             'settings': '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
@@ -309,10 +293,9 @@ const app = initializeApp(firebaseConfig);;
 
         /* ---------- Utilità ---------- */
         function esc(s) {
-            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'''}[c]));
         }
         function pad(n) { return String(n).padStart(2, '0'); }
-        // Chiave data in ORARIO LOCALE (toISOString sfasava di un giorno in Italia)
         function dataKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
         function leggi(chiave, fallback) {
             try { const v = JSON.parse(localStorage.getItem(chiave)); return v ?? fallback; } catch (e) { return fallback; }
@@ -320,8 +303,8 @@ const app = initializeApp(firebaseConfig);;
 
         /* ---------- Stato ---------- */
         const GIUST_DEFAULT = [
-            { id: 'Ferie',         nome: 'Ferie',         emoji: '🏖️', colore: '#a855f7', fisso: true },
-            { id: 'Permesso',      nome: 'Permesso',      emoji: '⏱️', colore: '#3b82f6', fisso: true },
+            { id: 'Ferie', nome: 'Ferie', emoji: '🏖️', colore: '#a855f7', fisso: true },
+            { id: 'Permesso', nome: 'Permesso', emoji: '⏱️', colore: '#3b82f6', fisso: true },
             { id: 'AltriPermessi', nome: 'Altri permessi', emoji: '📝', colore: '#f59e0b', fisso: true },
             { id: 'Smart Working', nome: 'Smart Working', emoji: '💻', colore: '#10b981', fisso: true }
         ];
@@ -338,7 +321,6 @@ const app = initializeApp(firebaseConfig);;
         let colonneCorrenti = [];
         let coloreScelto = PALETTE[4];
 
-        // Migra i vecchi valori "Malattia" nel nuovo giustificativo; restituisce true se ha cambiato qualcosa
         function migraMalattia(mappa) {
             let cambiato = false;
             Object.values(mappa || {}).forEach(giorni => {
@@ -472,10 +454,9 @@ const app = initializeApp(firebaseConfig);;
                 if (mese) {
                     const sep = g.lunedi && i > 0 ? ' border-l-2 border-slate-200' : '';
                     const tint = g.oggi ? ' bg-indigo-50' : (g.festivo ? ' bg-rose-50/70' : '');
-                    const numCls = g.oggi ? 'bg-indigo-600 text-white shadow-sm' : (g.festivo ? 'text-rose-600' : 'text-slate-700');
                     return `<th class="px-0.5 py-2 text-center${sep}${tint}" title="${esc(g.festivo || g.label)}">
                         <div class="text-[9px] font-semibold tracking-wide ${g.festivo ? 'text-rose-400' : 'text-slate-400'}">${g.dow}</div>
-                        <div class="mx-auto mt-0.5 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold ${numCls}">${g.num}</div>
+                        <div class="mx-auto mt-0.5 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold ${g.oggi ? 'bg-indigo-600 text-white shadow-sm' : (g.festivo ? 'text-rose-600' : 'text-slate-700')}">${g.num}</div>
                     </th>`;
                 }
                 const tint = g.oggi ? ' bg-indigo-50 text-indigo-600' : (g.festivo ? ' bg-rose-50/70 text-rose-500' : '');
@@ -529,7 +510,7 @@ const app = initializeApp(firebaseConfig);;
                         title = 'Ufficio';
                         cls = 'bg-slate-50 border-slate-200 hover:border-indigo-300 hover:bg-white hover:scale-105';
                         contenuto = mese ? '<span class="text-base leading-none opacity-70">🏦</span>'
-                                          : '<span class="mr-1">🏦</span><span class="text-slate-500">Ufficio</span>';
+                                        : '<span class="mr-1">🏦</span><span class="text-slate-500">Ufficio</span>';
                     }
 
                     const size = mese ? 'w-8 h-8 mx-auto' : 'w-full py-2 px-1';
@@ -568,7 +549,6 @@ const app = initializeApp(firebaseConfig);;
                 </tr>`;
             }).join('');
 
-            // Riga "In sede" con il conteggio dei presenti per giorno (solo vista mensile)
             if (mese) {
                 const tot = colleghi.length;
                 const celleSede = colonneCorrenti.map((g, i) => {
@@ -606,7 +586,6 @@ const app = initializeApp(firebaseConfig);;
         function selezionaStatoDaModal(valore) {
             if (!pianificazione[cellaAttiva.collega]) pianificazione[cellaAttiva.collega] = {};
             if (valore === '') {
-                // "Ufficio" esplicito: sovrascrive anche le ferie pianificate per quel giorno
                 pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = '';
                 delete pianificazione[cellaAttiva.collega][cellaAttiva.dataKey];
             } else {
@@ -781,7 +760,7 @@ const app = initializeApp(firebaseConfig);;
                 if (!cfg.apiKey || !cfg.projectId) throw new Error('missing');
                 localStorage.setItem('firebase_config_json', JSON.stringify(cfg));
                 location.reload();
-            } catch (e) { alert('Configurazione non riconosciuta. Incolla tutto il blocco firebaseConfig copiato dalla console.'); }
+            } catch (e) { alert('Configurazione non riconosciuta.'); }
         }
 
         function esportaDati() {
@@ -840,14 +819,7 @@ const app = initializeApp(firebaseConfig);;
 
         function erroreFirestore(e) {
             console.error(e);
-            const m = {
-                'permission-denied': 'Permesso negato da Firestore. Controlla: 1) il database è stato creato; 2) le regole sono pubblicate; 3) hai fatto il login.',
-                'not-found': 'Database Firestore non trovato: crealo dalla console (Databases & Storage > Firestore).',
-                'failed-precondition': 'Database Firestore non ancora creato o non pronto.',
-                'unavailable': 'Firestore non raggiungibile: controlla la connessione.',
-                'unauthenticated': 'Sessione scaduta: esci e riaccedi.'
-            };
-            ultimoErrore = (m[e && e.code] || ('Errore Firestore: ' + (e && (e.code || e.message)))) ;
+            ultimoErrore = 'Errore Firestore: ' + (e && (e.code || e.message));
             statoBadge('errore');
         }
 
@@ -878,17 +850,7 @@ const app = initializeApp(firebaseConfig);;
             auth.signInWithEmailAndPassword(EMAIL_TEAM, pw).then(() => {
                 document.getElementById('login-password').value = '';
             }).catch(e => {
-                const m = {
-                    'auth/invalid-credential': 'Password errata (oppure l\'utente del team non è ancora stato creato nella console Firebase).',
-                    'auth/wrong-password': 'Password errata.',
-                    'auth/user-not-found': 'Utente del team non creato: aggiungilo in Authentication > Users.',
-                    'auth/invalid-email': 'EMAIL_TEAM nel file non è un indirizzo valido.',
-                    'auth/too-many-requests': 'Troppi tentativi: riprova tra qualche minuto.',
-                    'auth/network-request-failed': 'Connessione assente.',
-                    'auth/operation-not-allowed': 'Accesso Email/Password non abilitato nella console Firebase.',
-                    'auth/unauthorized-domain': 'Dominio non autorizzato: aggiungilo in Authentication > Impostazioni > Domini autorizzati.'
-                };
-                err.innerText = m[e.code] || ('Errore: ' + e.code);
+                err.innerText = 'Password errata o utente non configurato.';
             });
         }
 
@@ -922,7 +884,7 @@ const app = initializeApp(firebaseConfig);;
             const ref = db.collection('presenze').doc('team');
             unsubRemoto = ref.onSnapshot(snap => {
                 if (snap.metadata.hasPendingWrites) return;
-                if (!snap.exists) { salvaRemoto(); return; } // primo avvio: carica i dati locali
+                if (!snap.exists) { salvaRemoto(); return; }
                 try {
                     const d = JSON.parse(snap.data().dati);
                     colleghi = d.colleghi || [];
