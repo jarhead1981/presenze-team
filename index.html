@@ -9,48 +9,12 @@
     <!-- Font Inter & Icone Lucide -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK Compat v10 -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7fc; }
         .timeline-scroll { -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
-
-    <!-- SCHERMATA DI LOGIN (Nascosta se già autenticato o in locale) -->
-    <div id="auth-screen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl space-y-6">
-            <div class="text-center space-y-2">
-                <div class="bg-indigo-600 text-white w-12 h-12 rounded-2xl mx-auto flex items-center justify-center shadow-lg">
-                    <i data-lucide="lock" class="w-6 h-6"></i>
-                </div>
-                <h2 class="text-xl font-bold text-slate-900">Accesso Riservato</h2>
-                <p class="text-xs text-slate-500">Inserisci le credenziali aziendali per accedere a PresenzeTeam.</p>
-            </div>
-
-            <form onsubmit="eseguiLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Email Aziendale</label>
-                    <input type="email5" id="login-email" required placeholder="nome.cognome@azienda.it" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
-                    <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div id="login-error" class="text-xs text-rose-600 font-medium hidden text-center"></div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-2xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center justify-center space-x-2">
-                    <i data-lucide="log-in" class="w-4 h-4"></i>
-                    <span>Accedi al Sistema</span>
-                </button>
-            </form>
-            <div class="text-center pt-2">
-                <button onclick="saltaLoginLocale()" class="text-xs text-slate-400 hover:text-slate-600 underline">Usa in modalità locale (Senza Firebase)</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Top Navigation Bar -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
@@ -72,11 +36,10 @@
             </div>
 
             <div class="flex items-center space-x-2">
-                <span id="firebase-status" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Offline
-                </span>
-                <button onclick="eseguiLogout()" id="btn-logout" class="hidden bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-2 rounded-xl text-xs font-medium transition-colors" title="Disconnetti">
-                    Esci
+                <!-- Pulsante per Esportare e Aggiornare su GitHub -->
+                <button onclick="esportaFileAggiornato()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center space-x-1.5" title="Scarica il file HTML aggiornato da caricare su GitHub">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Scarica HTML Aggiornato</span>
                 </button>
                 <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl text-sm transition-colors" title="Impostazioni">
                     <i data-lucide="settings" class="w-4 h-4"></i>
@@ -94,7 +57,7 @@
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        <!-- SEZIONE 1: TIMELINE (Settimanale o Mensile) -->
+        <!-- SEZIONE 1: TIMELINE -->
         <div id="sezione-timeline" class="space-y-6">
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -130,28 +93,22 @@
             </div>
 
             <!-- Legenda Stati Dinamica -->
-            <div id="legenda-container" class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600">
-                <!-- Generato via JS -->
-            </div>
+            <div id="legenda-container" class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600"></div>
 
             <!-- Timeline / Tabella Principale -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="timeline-scroll overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
-                            <tr id="timeline-header" class="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                <!-- Generato dinamicamente -->
-                            </tr>
+                            <tr id="timeline-header" class="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider"></tr>
                         </thead>
-                        <tbody id="timeline-body" class="divide-y divide-slate-100 text-sm">
-                            <!-- Generato via JavaScript -->
-                        </tbody>
+                        <tbody id="timeline-body" class="divide-y divide-slate-100 text-sm"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- SEZIONE 2: PIANO FERIE 2027 (ANNO INTERO) -->
+        <!-- SEZIONE 2: PIANO FERIE 2027 -->
         <div id="sezione-ferie2027" class="space-y-6 hidden">
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -167,9 +124,7 @@
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Dipendente</label>
-                    <select id="ferie-collega-select" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <!-- Popolato da JS -->
-                    </select>
+                    <select id="ferie-collega-select" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Data Inizio (2027)</label>
@@ -187,7 +142,7 @@
                 </div>
             </div>
 
-            <!-- Tabella Riepilogo Ferie 2027 Programmate -->
+            <!-- Tabella Riepilogo Ferie 2027 -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden p-6 space-y-4">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Periodi di Ferie Pianificati per il 2027</h3>
                 <div class="overflow-x-auto">
@@ -200,9 +155,7 @@
                                 <th class="py-3 px-4 text-right">Azioni</th>
                             </tr>
                         </thead>
-                        <tbody id="tabella-ferie2027-body" class="divide-y divide-slate-100 text-sm">
-                            <!-- Popolato via JS -->
-                        </tbody>
+                        <tbody id="tabella-ferie2027-body" class="divide-y divide-slate-100 text-sm"></tbody>
                     </table>
                 </div>
             </div>
@@ -210,7 +163,7 @@
 
     </main>
 
-    <!-- Modal Cambio Stato Rapido (Timeline) -->
+    <!-- Modal Cambio Stato Rapido -->
     <div id="modal-stato" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between">
@@ -218,25 +171,22 @@
                 <button onclick="chiudiModalStato()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <p id="modal-subtitle" class="text-xs text-slate-500">Seleziona lo stato per questo giorno:</p>
-            
-            <div id="modal-stati-list" class="grid grid-cols-1 gap-2.5 pt-2">
-                <!-- Generato dinamicamente -->
-            </div>
+            <div id="modal-stati-list" class="grid grid-cols-1 gap-2.5 pt-2"></div>
         </div>
     </div>
 
-    <!-- Modal Impostazioni & Configurazione -->
+    <!-- Modal Impostazioni & Giustificativi -->
     <div id="config-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900">Impostazioni Applicazione</h3>
-                    <p class="text-xs text-slate-500">Gestisci i giustificativi e la configurazione Firebase.</p>
+                    <p class="text-xs text-slate-500">Gestisci i giustificativi e gli stati personalizzati.</p>
                 </div>
                 <button onclick="chiudiConfigModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <!-- Sezione 1: Gestione Giustificativi -->
+            <!-- Sezione Giustificativi -->
             <div class="space-y-4">
                 <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
                     <i data-lucide="tag" class="w-4 h-4 text-indigo-600"></i>
@@ -250,7 +200,7 @@
                         <input type="text" id="nuovo-giust-nome" placeholder="Es. Formazione" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Icona (Lucide)</label>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Icona</label>
                         <select id="nuovo-giust-icona" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
                             <option value="sun">Sun</option>
                             <option value="clock">Clock</option>
@@ -262,7 +212,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Colore Tema</label>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Colore</label>
                         <select id="nuovo-giust-colore" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
                             <option value="purple">Viola</option>
                             <option value="blue">Blu</option>
@@ -280,18 +230,8 @@
                 </div>
             </div>
 
-            <!-- Sezione 2: Configurazione Firebase (JSON) -->
-            <div class="space-y-3 pt-4 border-t border-slate-100">
-                <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
-                    <i data-lucide="cloud" class="w-4 h-4 text-indigo-600"></i>
-                    <span>Configurazione Firebase (JSON)</span>
-                </h4>
-                <textarea id="firebase-config-input" rows="4" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='{ apiKey: "...", projectId: "..." }'></textarea>
-            </div>
-
-            <div class="flex justify-end space-x-3 pt-2">
-                <button onclick="chiudiConfigModal()" class="px-5 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-xl font-medium">Annulla</button>
-                <button onclick="salvaImpostazioniGenerali()" class="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md">Salva & Connetti</button>
+            <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                <button onclick="chiudiConfigModal()" class="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md">Chiudi</button>
             </div>
         </div>
     </div>
@@ -300,98 +240,69 @@
     <script>
         lucide.createIcons();
 
-        let colleghi = JSON.parse(localStorage.getItem('team_colleghi')) || ['Marco Lotti', 'Luana Andreoni', 'Maria Rossi'];
-        let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || {};
-        let pianoFerie2027 = JSON.parse(localStorage.getItem('team_ferie_2027')) || [];
+        // Dati iniziali incorporati direttamente nel codice (così GitHub Pages li mostrerà sempre aggiornati)
+        let datiInizialiApp = {
+            colleghi: ['Marco Lotti', 'Luana Andreoni', 'Maria Rossi'],
+            pianificazione: {},
+            pianoFerie2027: [],
+            giustificativi: [
+                { id: 'Ferie', label: 'Ferie', icon: 'sun', color: 'purple' },
+                { id: 'Permesso', label: 'Permesso', icon: 'clock', color: 'blue' },
+                { id: 'Smart Working', label: 'Smart Working', icon: 'laptop', color: 'emerald' }
+            ],
+            ufficioConfig: { label: 'Ufficio / Banca', icon: 'landmark', color: 'indigo' }
+        };
 
-        let giustificativi = JSON.parse(localStorage.getItem('team_giustificativi')) || [
-            { id: 'Ferie', label: 'Ferie', icon: 'sun', color: 'purple' },
-            { id: 'Permesso', label: 'Permesso', icon: 'clock', color: 'blue' },
-            { id: 'Smart Working', label: 'Smart Working', icon: 'laptop', color: 'emerald' }
-        ];
+        // Caricamento da localStorage o fallback sui dati incorporati
+        let colleghi = JSON.parse(localStorage.getItem('team_colleghi')) || datiInizialiApp.colleghi;
+        let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || datiInizialiApp.pianificazione;
+        let pianoFerie2027 = JSON.parse(localStorage.getItem('team_ferie_2027')) || datiInizialiApp.pianoFerie2027;
+        let giustificativi = JSON.parse(localStorage.getItem('team_giustificativi')) || datiInizialiApp.giustificativi;
+        let ufficioConfig = JSON.parse(localStorage.getItem('team_ufficio_config')) || datiInizialiApp.ufficioConfig;
 
-        let ufficioConfig = JSON.parse(localStorage.getItem('team_ufficio_config')) || { label: 'Ufficio / Banca', icon: 'landmark', color: 'indigo' };
-
-        let db = null;
-        let auth = null;
-        let usaFirebase = false;
         let cellaAttiva = { collega: '', dataKey: '' };
         let vistaCorrente = 'settimana';
         let offsetTempo = 0;
 
-        // Inizializzazione Firebase da localStorage (senza chiavi hardcoded nel codice)
-        function initFirebase() {
-            const configStr = localStorage.getItem('firebase_config_json');
-            if (configStr) {
-                try {
-                    const firebaseConfig = JSON.parse(configStr);
-                    if (!firebase.apps.length) {
-                        firebase.initializeApp(firebaseConfig);
-                    }
-                    db = firebase.firestore();
-                    auth = firebase.auth();
-                    usaFirebase = true;
-
-                    // Monitora lo stato dell'autenticazione
-                    auth.onAuthStateChanged(user => {
-                        if (user) {
-                            document.getElementById('auth-screen').classList.add('hidden');
-                            document.getElementById('btn-logout').classList.remove('hidden');
-                            document.getElementById('firebase-status').innerHTML = `<span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> ${user.email}`;
-                            document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
-                            caricaDaFirebase();
-                        } else {
-                            document.getElementById('auth-screen').classList.remove('hidden');
-                            document.getElementById('btn-logout').classList.add('hidden');
-                        }
-                    });
-                } catch (e) {
-                    console.error("Configurazione Firebase non valida:", e);
-                    attivaModalitaLocale();
-                }
-            } else {
-                // Se non c'è configurazione, attiva modalità locale o mostra il modal impostazioni
-                attivaModalitaLocale();
-            }
+        function salvaLocale() {
+            localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
+            localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
+            localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
+            localStorage.setItem('team_giustificativi', JSON.stringify(giustificativi));
+            localStorage.setItem('team_ufficio_config', JSON.stringify(ufficioConfig));
         }
 
-        function attivaModalitaLocale() {
-            usaFirebase = false;
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('firebase-status').innerHTML = '<span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale';
-            document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200";
-        }
+        // Funzione magica che genera un nuovo file index.html con i dati attuali incorporati
+        function esportaFileAggiornato() {
+            salvaLocale();
+            
+            // Cattura l'intero codice HTML attuale della pagina
+            let htmlCorrente = document.documentElement.outerHTML;
 
-        async function eseguiLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const errBox = document.getElementById('login-error');
-            errBox.classList.add('hidden');
+            // Inserisce i dati aggiornati all'interno dello script in modo permanente
+            let datiAggiornatiJSON = `let datiInizialiApp = {
+            colleghi: ${JSON.stringify(colleghi)},
+            pianificazione: ${JSON.stringify(pianificazione)},
+            pianoFerie2027: ${JSON.stringify(pianoFerie2027)},
+            giustificativi: ${JSON.stringify(giustificativi)},
+            ufficioConfig: ${JSON.stringify(ufficioConfig)}
+        };`;
 
-            if (!auth) {
-                errBox.innerText = "Configura prima le credenziali Firebase nelle impostazioni (icona ingranaggio in alto).";
-                errBox.classList.remove('hidden');
-                return;
-            }
+            // Sostituisce la vecchia dichiarazione dati con quella nuova aggiornata
+            htmlCorrente = htmlCorrente.replace(/let datiInizialiApp = \{[\s\S]*?\};/, datiAggiornatiJSON);
 
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-            } catch (error) {
-                errBox.innerText = "Credenziali non valide o accesso non autorizzato.";
-                errBox.classList.remove('hidden');
-            }
-        }
+            // Crea il file scaricabile
+            let blob = new Blob([htmlCorrente], { type: 'text/html;charset=utf-8' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
-        async function eseguiLogout() {
-            if (auth) {
-                await auth.signOut();
-                location.reload();
-            }
-        }
-
-        function saltaLoginLocale() {
-            attivaModalitaLocale();
+            alert('File index.html scaricato con successo!\n\nOra caricalo su GitHub (trascinandolo o sostituendo il vecchio file) per aggiornare la pagina di tutti i colleghi.');
         }
 
         function getColorClasses(color) {
@@ -425,11 +336,8 @@
             if (!isoString) return '';
             let parti = isoString.split('-');
             if (parti.length !== 3) return isoString;
-            let anno = parti[0];
-            let meseIdx = parseInt(parti[1], 10) - 1;
-            let giorno = parti[2];
             let mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-            return `${giorno} ${mesi[meseIdx]} ${anno}`;
+            return `${parti[2]} ${mesi[parseInt(parti[1], 10) - 1]} ${parti[0]}`;
         }
 
         function impostaVista(tipo) {
@@ -468,9 +376,7 @@
                         dataKey: dataKey
                     });
                 }
-                let primo = giorni[0].label;
-                let ultimo = giorni[4].label;
-                document.getElementById('label-periodo-corrente').innerText = `${primo} — ${ultimo}`;
+                document.getElementById('label-periodo-corrente').innerText = `${giorni[0].label} — ${giorni[4].label}`;
             } else {
                 let dataBase = new Date();
                 dataBase.setMonth(dataBase.getMonth() + offsetTempo);
@@ -483,9 +389,8 @@
                     let d = new Date(anno, mese, giorno);
                     if (d.getDay() !== 0 && d.getDay() !== 6) {
                         let dataKey = d.toISOString().split('T')[0];
-                        let nomeBreveGiorno = nomiGiorniBrevi[d.getDay()];
                         giorni.push({
-                            label: `${nomeBreveGiorno} ${giorno} ${mesiBrevi[mese]}`,
+                            label: `${nomiGiorniBrevi[d.getDay()]} ${giorno} ${mesiBrevi[mese]}`,
                             dataKey: dataKey
                         });
                     }
@@ -514,7 +419,6 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            initFirebase();
             aggiornaVistaTempo();
             renderLegenda();
         });
@@ -659,7 +563,7 @@
             pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = valore;
             chiudiModalStato();
             renderTimeline();
-            salvaAutomatico();
+            salvaLocale();
         }
 
         function aggiornaSelectFerieColleghi() {
@@ -676,14 +580,15 @@
             if(dataInizio > dataFine) { alert('Data inizio successiva alla fine.'); return; }
 
             pianoFerie2027.push({ id: Date.now(), collega, dataInizio, dataFine });
-            salvaAutomatico();
+            salvaLocale();
             renderTabellaFerie2027();
             renderTimeline();
+            alert('Periodo di ferie aggiunto!');
         }
 
         function rimuoviPeriodoFerie2027(id) {
             pianoFerie2027 = pianoFerie2027.filter(f => f.id !== id);
-            salvaAutomatico();
+            salvaLocale();
             renderTabellaFerie2027();
             renderTimeline();
         }
@@ -710,50 +615,6 @@
             lucide.createIcons();
         }
 
-        async function salvaAutomatico() {
-            localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
-            localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
-            localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
-            localStorage.setItem('team_giustificativi', JSON.stringify(giustificativi));
-            localStorage.setItem('team_ufficio_config', JSON.stringify(ufficioConfig));
-
-            if (usaFirebase && db && auth && auth.currentUser) {
-                try {
-                    await db.collection('presenzeTeam').doc('datiGlobali').set({
-                        colleghi,
-                        pianificazione,
-                        pianoFerie2027,
-                        giustificativi,
-                        ufficioConfig,
-                        aggiornatoIl: new Date().toISOString()
-                    });
-                } catch (error) {
-                    console.error("Errore salvataggio Cloud:", error);
-                }
-            }
-        }
-
-        async function caricaDaFirebase() {
-            if (!usaFirebase || !db) return;
-            try {
-                const docRef = await db.collection('presenzeTeam').doc('datiGlobali').get();
-                if (docRef.exists) {
-                    const data = docRef.data();
-                    if (data.colleghi) colleghi = data.colleghi;
-                    if (data.pianificazione) pianificazione = data.pianificazione;
-                    if (data.pianoFerie2027) pianoFerie2027 = data.pianoFerie2027;
-                    if (data.giustificativi) giustificativi = data.giustificativi;
-                    if (data.ufficioConfig) ufficioConfig = data.ufficioConfig;
-
-                    aggiornaVistaTempo();
-                    renderLegenda();
-                    renderTabellaFerie2027();
-                }
-            } catch (error) {
-                console.error("Errore caricamento Cloud:", error);
-            }
-        }
-
         function aggiungiCollega() {
             const input = document.getElementById('nuovo-collega-nome');
             const nome = input.value.trim();
@@ -762,7 +623,7 @@
 
             colleghi.push(nome);
             input.value = '';
-            salvaAutomatico();
+            salvaLocale();
             renderTimeline();
             aggiornaSelectFerieColleghi();
         }
@@ -773,7 +634,7 @@
                 colleghi = colleghi.filter(c => c !== nome);
                 delete pianificazione[nome];
                 pianoFerie2027 = pianoFerie2027.filter(f => f.collega !== nome);
-                salvaAutomatico();
+                salvaLocale();
                 renderTimeline();
                 aggiornaSelectFerieColleghi();
             }
@@ -781,10 +642,6 @@
 
         function apriConfigModal() { 
             renderGiustificativiConfigList();
-            const cfgSaved = localStorage.getItem('firebase_config_json');
-            if (cfgSaved) {
-                document.getElementById('firebase-config-input').value = cfgSaved;
-            }
             document.getElementById('config-modal').classList.remove('hidden'); 
             lucide.createIcons();
         }
@@ -821,29 +678,17 @@
 
             nomeInput.value = '';
             renderGiustificativiConfigList();
-            salvaAutomatico();
+            salvaLocale();
+            renderLegenda();
+            renderTimeline();
         }
 
         function rimuoviGiustificativo(index) {
             giustificativi.splice(index, 1);
             renderGiustificativiConfigList();
-            salvaAutomatico();
-        }
-
-        function salvaImpostazioniGenerali() {
-            const valFirebase = document.getElementById('firebase-config-input').value.trim();
-            if(valFirebase) {
-                try {
-                    const cfg = JSON.parse(valFirebase);
-                    localStorage.setItem('firebase_config_json', JSON.stringify(cfg));
-                } catch(e) { alert('JSON non valido'); return; }
-            } else {
-                localStorage.removeItem('firebase_config_json');
-            }
-
-            salvaAutomatico();
-            chiudiConfigModal();
-            location.reload();
+            salvaLocale();
+            renderLegenda();
+            renderTimeline();
         }
     </script>
 </body>
