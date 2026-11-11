@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PresenzeTeam - Timeline ed Eventi</title>
+    <title>PresenzeTeam - Timeline & Piano Ferie 2027</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Inter & Icone Lucide -->
@@ -25,10 +25,16 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-base sm:text-lg text-slate-900 leading-tight">PresenzeTeam</h1>
-                    <p class="text-[11px] text-slate-500">Timeline & Bacheca Eventi</p>
+                    <p class="text-[11px] text-slate-500">Timeline & Piano Ferie 2027</p>
                 </div>
             </div>
             
+            <!-- Tab di Navigazione Rapida -->
+            <div class="hidden sm:flex items-center space-x-1 bg-slate-100 p-1 rounded-2xl">
+                <button onclick="mostraTab('timeline')" id="btn-tab-timeline" class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all bg-white text-indigo-600 shadow-sm">Timeline Settimanale</button>
+                <button onclick="mostraTab('ferie2027')" id="btn-tab-ferie2027" class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-slate-900">🏖️ Piano Ferie 2027</button>
+            </div>
+
             <div class="flex items-center space-x-2">
                 <span id="firebase-status" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
                     <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale
@@ -40,126 +46,139 @@
         </div>
     </header>
 
+    <!-- Menu mobile per cambio tab -->
+    <div class="sm:hidden bg-white border-b border-slate-200 px-4 py-2 flex justify-around text-xs font-semibold">
+        <button onclick="mostraTab('timeline')" id="mob-tab-timeline" class="text-indigo-600">Timeline Settimanale</button>
+        <button onclick="mostraTab('ferie2027')" id="mob-tab-ferie2027" class="text-slate-600">🏖️ Piano Ferie 2027</button>
+    </div>
+
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        <!-- NUOVA SEZIONE: Bacheca, Celebrazioni e Prossimi Eventi (ispirata all'immagine) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- Widget Celebrazioni / Compleanni Colleghi -->
-            <div class="lg:col-span-5 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+        <!-- SEZIONE 1: TIMELINE SETTIMANALE -->
+        <div id="sezione-timeline" class="space-y-6">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Prossime celebrazioni</h3>
-                        <div class="flex space-x-1 text-slate-400">
-                            <button class="p-1 hover:text-slate-600"><i data-lucide="arrow-left" class="w-4 h-4"></i></button>
-                            <button class="p-1 hover:text-slate-600"><i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                    <div class="flex items-center space-x-3 mb-1">
+                        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+                            <button onclick="cambiaSettimana(-1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors shadow-sm" title="Settimana precedente">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <span id="label-settimana-corrente" class="text-xs font-bold text-indigo-600 uppercase tracking-wider px-3">Settimana</span>
+                            <button onclick="cambiaSettimana(1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors shadow-sm" title="Settimana successiva">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
                         </div>
+                        <button onclick="vaiOggi()" class="text-xs text-slate-500 hover:text-indigo-600 font-medium underline">Oggi</button>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-50/80 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
-                            <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 font-bold mx-auto flex items-center justify-center text-sm shadow-inner">
-                                ML
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-xs">Marco Lotti</h4>
-                                <p class="text-[11px] text-slate-500">17 Febbraio</p>
-                            </div>
-                        </div>
-                        <div class="bg-slate-50/80 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
-                            <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-700 font-bold mx-auto flex items-center justify-center text-sm shadow-inner">
-                                LA
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-xs">Luana Andreoni</h4>
-                                <p class="text-[11px] text-slate-500">17 Febbraio</p>
-                            </div>
-                        </div>
+                    <h2 class="text-2xl font-bold text-slate-900">Pianificazione Team</h2>
+                </div>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
+                        <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="bg-transparent px-3 py-1.5 text-sm focus:outline-none w-40 sm:w-48">
+                        <button onclick="aggiungiCollega()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 whitespace-nowrap">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i>
+                            <span>Aggiungi</span>
+                        </button>
                     </div>
+                    <button onclick="salvaTutto()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Salva</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Widget Prossimi Eventi / Tornei aziendali -->
-            <div class="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Prossimi eventi</h3>
-                    <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex items-start justify-between">
-                        <div class="space-y-1.5">
-                            <div class="flex items-center space-x-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                                <h4 class="font-bold text-slate-900 text-sm">Torneo di Padel</h4>
-                            </div>
-                            <p class="text-xs text-slate-600 flex items-center space-x-1.5">
-                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
-                                <span>25 Marzo - 28 Marzo</span>
-                            </p>
-                            <p class="text-xs text-slate-500 flex items-center space-x-1.5">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-indigo-500"></i>
-                                <span>Piste di av. Burgos</span>
-                            </p>
-                        </div>
-                        <div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-md flex items-center justify-center">
-                            <i data-lucide="trophy" class="w-6 h-6"></i>
-                        </div>
-                    </div>
-                </div>
+            <!-- Legenda Stati -->
+            <div class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600">
+                <span class="text-slate-400">Stati:</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">🏢 Ufficio</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 border border-purple-200">🏖️ Ferie</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-100 text-blue-700 border border-blue-200">⏱️ Permesso</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200">🏥 Malattia</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">💻 Smart Working</span>
             </div>
 
+            <!-- Timeline / Tabella Principale -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="timeline-scroll overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                            <tr id="timeline-header" class="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <!-- Generato dinamicamente -->
+                            </tr>
+                        </thead>
+                        <tbody id="timeline-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Generato via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
-        <!-- Header Dashboard Timeline -->
-        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <div class="flex items-center space-x-2 text-indigo-600 font-semibold text-xs uppercase tracking-wider mb-1">
-                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-                    <span>Vista Timeline Settimanale</span>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-900">Pianificazione Team</h2>
-            </div>
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
-                    <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="bg-transparent px-3 py-1.5 text-sm focus:outline-none w-40 sm:w-48">
-                    <button onclick="aggiungiCollega()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 whitespace-nowrap">
-                        <i data-lucide="user-plus" class="w-4 h-4"></i>
-                        <span>Aggiungi</span>
-                    </button>
+        <!-- SEZIONE 2: PIANO FERIE 2027 (ANNO INTERO) -->
+        <div id="sezione-ferie2027" class="space-y-6 hidden">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center space-x-2 text-purple-600 font-semibold text-xs uppercase tracking-wider mb-1">
+                        <i data-lucide="calendar-range" class="w-3.5 h-3.5"></i>
+                        <span>Programmazione Annua</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900">Piano Ferie 2027</h2>
                 </div>
                 <button onclick="salvaTutto()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
                     <i data-lucide="save" class="w-4 h-4"></i>
-                    <span>Salva</span>
+                    <span>Salva Piano Ferie</span>
                 </button>
             </div>
-        </div>
 
-        <!-- Legenda Stati -->
-        <div class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600">
-            <span class="text-slate-400">Stati:</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">🏢 Ufficio</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 border border-purple-200">🏖️ Ferie</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-100 text-blue-700 border border-blue-200">⏱️ Permesso</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200">🏥 Malattia</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">💻 Smart Working</span>
-        </div>
+            <!-- Form Inserimento Periodo Ferie 2027 -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Dipendente</label>
+                    <select id="ferie-collega-select" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <!-- Popolato da JS -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Data Inizio (2027)</label>
+                    <input type="date" id="ferie-data-inizio" min="2027-01-01" max="2027-12-31" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Data Fine (2027)</label>
+                    <input type="date" id="ferie-data-fine" min="2027-01-01" max="2027-12-31" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <button onclick="aggiungiPeriodoFerie2027()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-2.5 rounded-2xl text-sm transition-all shadow-md shadow-purple-100 flex items-center justify-center space-x-1.5">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Aggiungi Ferie 2027</span>
+                    </button>
+                </div>
+            </div>
 
-        <!-- Timeline / Tabella Principale -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="timeline-scroll overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[800px]">
-                    <thead>
-                        <tr id="timeline-header" class="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                            <!-- Generato dinamicamente con le date -->
-                        </tr>
-                    </thead>
-                    <tbody id="timeline-body" class="divide-y divide-slate-100 text-sm">
-                        <!-- Generato via JavaScript -->
-                    </tbody>
-                </table>
+            <!-- Tabella Riepilogo Ferie 2027 Programmate -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden p-6 space-y-4">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Periodi di Ferie Pianificati per il 2027</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <th class="py-3 px-4">Dipendente</th>
+                                <th class="py-3 px-4">Dal giorno</th>
+                                <th class="py-3 px-4">Al giorno</th>
+                                <th class="py-3 px-4 text-right">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabella-ferie2027-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Popolato via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- Modal Cambio Stato Rapido -->
+    <!-- Modal Cambio Stato Rapido (Timeline) -->
     <div id="modal-stato" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between">
@@ -200,7 +219,7 @@
             <p class="text-xs text-slate-500">Incolla qui la configurazione JSON di Firebase per sincronizzare in tempo reale.</p>
             <textarea id="firebase-config-input" rows="6" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='{ apiKey: "...", projectId: "..." }'></textarea>
             <div class="flex justify-end space-x-3 pt-2">
-                <button onclick="chiudiConfigModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Annulla</button>
+                <button onclick="chiudiModalStato()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Annulla</button>
                 <button onclick="salvaConfigFirebase()" class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl">Salva</button>
             </div>
         </div>
@@ -212,29 +231,84 @@
 
         let colleghi = JSON.parse(localStorage.getItem('team_colleghi')) || ['Marco Lotti', 'Luana Andreoni', 'Maria Rossi'];
         let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || {};
+        let pianoFerie2027 = JSON.parse(localStorage.getItem('team_ferie_2027')) || [];
 
-        let cellaAttiva = { collega: '', giorno: '' };
+        let cellaAttiva = { collega: '', dataKey: '' };
+        let offsetSettimana = 0;
 
-        function getGiorniLavorativiCorrenti() {
+        function mostraTab(tab) {
+            if(tab === 'timeline') {
+                document.getElementById('sezione-timeline').classList.remove('hidden');
+                document.getElementById('sezione-ferie2027').classList.add('hidden');
+                document.getElementById('btn-tab-timeline').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all bg-white text-indigo-600 shadow-sm";
+                document.getElementById('btn-tab-ferie2027').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-slate-900";
+            } else {
+                document.getElementById('sezione-timeline').classList.add('hidden');
+                document.getElementById('sezione-ferie2027').classList.remove('hidden');
+                document.getElementById('btn-tab-timeline').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-slate-900";
+                document.getElementById('btn-tab-ferie2027').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all bg-white text-purple-600 shadow-sm";
+                aggiornaSelectFerieColleghi();
+                renderTabellaFerie2027();
+            }
+        }
+
+        function getGiorniLavorativiPerOffset(offset) {
             let curr = new Date();
-            let first = curr.getDate() - curr.getDay() + 1;
+            let day = curr.getDay();
+            let diff = curr.getDate() - day + (day == 0 ? -6 : 1);
+            let lunedi = new Date(curr.setDate(diff));
+            
+            lunedi.setDate(lunedi.getDate() + (offset * 7));
+
             let giorni = [];
             let nomiGiorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
-            
+            let mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+
             for (let i = 0; i < 5; i++) {
-                let d = new Date(curr.setDate(first + i));
+                let d = new Date(lunedi);
+                d.setDate(lunedi.getDate() + i);
                 let giornoNome = nomiGiorni[i];
                 let giornoNum = d.getDate();
-                giorni.push({ nome: giornoNome, label: `${giornoNome} ${giornoNum}` });
+                let meseStr = mesi[d.getMonth()];
+                
+                let dataKey = d.toISOString().split('T')[0];
+
+                giorni.push({ 
+                    nome: giornoNome, 
+                    label: `${giornoNome} ${giornoNum} ${meseStr}`, 
+                    dataKey: dataKey 
+                });
             }
             return giorni;
         }
 
-        const giorniLavorativi = getGiorniLavorativiCorrenti();
+        let giorniLavorativi = [];
 
-        window.addEventListener('DOMContentLoaded', () => {
+        function aggiornaVistaSettimana() {
+            giorniLavorativi = getGiorniLavorativiPerOffset(offsetSettimana);
+            
+            if(giorniLavorativi.length > 0) {
+                let primo = giorniLavorativi[0].label;
+                let ultimo = giorniLavorativi[4].label;
+                document.getElementById('label-settimana-corrente').innerText = `${primo} - ${ultimo}`;
+            }
+
             renderHeader();
             renderTimeline();
+        }
+
+        function cambiaSettimana(direzione) {
+            offsetSettimana += direzione;
+            aggiornaVistaSettimana();
+        }
+
+        function vaiOggi() {
+            offsetSettimana = 0;
+            aggiornaVistaSettimana();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            aggiornaVistaSettimana();
         });
 
         function renderHeader() {
@@ -259,7 +333,13 @@
                 if (!pianificazione[collega]) pianificazione[collega] = {};
 
                 let celleGiorni = giorniLavorativi.map(g => {
-                    let giust = pianificazione[collega][g.nome] || '';
+                    // Controlla prima se c'è un'impostazione manuale sulla timeline, altrimenti verifica se ricade nel piano ferie 2027
+                    let giust = pianificazione[collega][g.dataKey] || '';
+                    if(!giust) {
+                        // Verifica se la dataKey rientra in qualche periodo di ferie 2027 registrato
+                        let inFerie = pianoFerie2027.some(f => f.collega === collega && g.dataKey >= f.dataInizio && g.dataKey <= f.dataFine);
+                        if(inFerie) giust = 'Ferie';
+                    }
                     
                     let styleClass = "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300";
                     let testo = "Ufficio";
@@ -271,7 +351,7 @@
 
                     return `
                         <td class="py-3.5 px-2 text-center">
-                            <button onclick="apriModalStato('${collega}', '${g.nome}')" class="w-full py-2.5 px-2 rounded-2xl border text-xs transition-all flex items-center justify-center space-x-1 cursor-pointer ${styleClass}">
+                            <button onclick="apriModalStato('${collega}', '${g.dataKey}', '${g.label}')" class="w-full py-2.5 px-2 rounded-2xl border text-xs transition-all flex items-center justify-center space-x-1 cursor-pointer ${styleClass}">
                                 <span class="truncate">${testo}</span>
                             </button>
                         </td>
@@ -304,10 +384,10 @@
             lucide.createIcons();
         }
 
-        function apriModalStato(collega, giorno) {
-            cellaAttiva = { collega, giorno };
+        function apriModalStato(collega, dataKey, labelGiorno) {
+            cellaAttiva = { collega, dataKey };
             document.getElementById('modal-title').innerText = `Stato per ${collega}`;
-            document.getElementById('modal-subtitle').innerText = `Modifica per il giorno: ${giorno}`;
+            document.getElementById('modal-subtitle').innerText = `Modifica per il giorno: ${labelGiorno}`;
             document.getElementById('modal-stato').classList.remove('hidden');
         }
 
@@ -317,15 +397,70 @@
 
         function selezionaStatoDaModal(valore) {
             if (!pianificazione[cellaAttiva.collega]) pianificazione[cellaAttiva.collega] = {};
-            pianificazione[cellaAttiva.collega][cellaAttiva.giorno] = valore;
+            pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = valore;
             chiudiModalStato();
             renderTimeline();
+        }
+
+        // Gestione Piano Ferie 2027
+        function aggiornaSelectFerieColleghi() {
+            const sel = document.getElementById('ferie-collega-select');
+            sel.innerHTML = colleghi.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function aggiungiPeriodoFerie2027() {
+            const collega = document.getElementById('ferie-collega-select').value;
+            const dataInizio = document.getElementById('ferie-data-inizio').value;
+            const dataFine = document.getElementById('ferie-data-fine').value;
+
+            if(!dataInizio || !dataFine) {
+                alert('Seleziona sia la data di inizio che quella di fine.');
+                return;
+            }
+            if(dataInizio > dataFine) {
+                alert('La data di inizio non può essere successiva alla data di fine.');
+                return;
+            }
+
+            pianoFerie2027.push({ id: Date.now(), collega, dataInizio, dataFine });
+            salvaTutto();
+            renderTabellaFerie2027();
+            alert('Periodo di ferie 2027 aggiunto con successo!');
+        }
+
+        function rimuoviPeriodoFerie2027(id) {
+            pianoFerie2027 = pianoFerie2027.filter(f => f.id !== id);
+            salvaTutto();
+            renderTabellaFerie2027();
+        }
+
+        function renderTabellaFerie2027() {
+            const tbody = document.getElementById('tabella-ferie2027-body');
+            if(pianoFerie2027.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400 italic">Nessun periodo di ferie registrato per il 2027.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = pianoFerie2027.map(f => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="py-3 px-4 font-semibold text-slate-800">${f.collega}</td>
+                    <td class="py-3 px-4 text-slate-600">${f.dataInizio}</td>
+                    <td class="py-3 px-4 text-slate-600">${f.dataFine}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="rimuoviPeriodoFerie2027(${f.id})" class="text-slate-400 hover:text-rose-600 p-1.5 transition-colors rounded-lg hover:bg-rose-50" title="Elimina">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
         }
 
         function salvaTutto() {
             localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
             localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
-            alert('Timeline salvata con successo!');
+            localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
+            alert('Dati salvati con successo!');
         }
 
         function aggiungiCollega() {
@@ -338,6 +473,7 @@
             input.value = '';
             salvaTutto();
             renderTimeline();
+            aggiornaSelectFerieColleghi();
         }
 
         function rimuoviCollega(nome) {
@@ -345,8 +481,10 @@
             if(confirm(`Vuoi rimuovere ${nome}?`)) {
                 colleghi = colleghi.filter(c => c !== nome);
                 delete pianificazione[nome];
+                pianoFerie2027 = pianoFerie2027.filter(f => f.collega !== nome);
                 salvaTutto();
                 renderTimeline();
+                aggiornaSelectFerieColleghi();
             }
         }
 
