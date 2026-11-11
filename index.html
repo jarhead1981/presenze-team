@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PresenzeTeam - Calendario e Giustificativi Diretti</title>
+    <title>PresenzeTeam - Calendario Presenze</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Inter & Icone Lucide -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7fc; }
     </style>
@@ -23,22 +20,16 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-md">
-                    <i data-lucide="clock" class="w-6 h-6"></i>
+                    <i data-lucide="calendar-range" class="w-6 h-6"></i>
                 </div>
                 <div>
                     <h1 class="font-bold text-lg text-slate-900 leading-tight">PresenzeTeam</h1>
-                    <p class="text-xs text-slate-500">Pianificazione e Giustificativi Settimanali</p>
+                    <p class="text-xs text-slate-500">Calendario e Gestione Giustificativi</p>
                 </div>
             </div>
             
-            <!-- Navigazione tra le sezioni -->
-            <nav class="hidden md:flex space-x-1 bg-slate-100 p-1 rounded-xl">
-                <button onclick="mostraSezione('calendario')" id="nav-calendario" class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all bg-white text-indigo-600 shadow-sm">Calendario & Giustificativi</button>
-                <button onclick="mostraSezione('colleghi')" id="nav-colleghi" class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900">Gestione Colleghi</button>
-            </nav>
-
             <div class="flex items-center space-x-3">
-                <span id="firebase-status" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                <span id="firebase-status" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                     <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full"></span> Locale
                 </span>
                 <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl text-sm transition-colors" title="Configura Firebase">
@@ -48,107 +39,50 @@
         </div>
     </header>
 
-    <!-- Menu Mobile -->
-    <div class="md:hidden bg-white border-b border-slate-200 px-4 py-2 flex justify-around text-sm font-medium">
-        <button onclick="mostraSezione('calendario')" class="text-indigo-600 font-semibold">Calendario</button>
-        <button onclick="mostraSezione('colleghi')" class="text-slate-600">Colleghi</button>
-    </div>
-
     <!-- Main Container -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- SEZIONE 1: CALENDARIO SETTIMANALE E GIUSTIFICATIVI DIRETTI -->
-        <div id="sezione-calendario" class="space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- COLONNA SINISTRA: Lista Colleghi (senza menu laterale complesso) -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Colleghi del Team</h2>
+                    <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <p class="text-xs text-slate-500 mb-4">Clicca su un collega per visualizzare e modificare il suo calendario settimanale.</p>
                 
-                <!-- Sidebar Utente & Cronometro -->
-                <div class="lg:col-span-4 space-y-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Utente Attivo</h2>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Seleziona profilo:</label>
-                        <select id="colleague-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none mb-6">
-                            <!-- Popolato da JS -->
-                        </select>
-
-                        <!-- Box Cronometro -->
-                        <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-xl text-center relative overflow-hidden">
-                            <p class="text-xs font-medium text-indigo-200 uppercase tracking-widest mb-1">Cronometro Giornaliero</p>
-                            <div id="timer-display" class="text-4xl font-mono font-bold tracking-tight my-3">00:00:00</div>
-                            <p id="timer-status" class="text-xs text-indigo-300 mb-5">Stato: Pronto</p>
-                            <div class="grid grid-cols-2 gap-3">
-                                <button id="btn-start" onclick="avviaTimbratura()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2.5 px-4 rounded-xl text-sm transition-all shadow-md flex items-center justify-center space-x-1.5">
-                                    <i data-lucide="play" class="w-4 h-4"></i>
-                                    <span>Entra</span>
-                                </button>
-                                <button id="btn-stop" onclick="fermaTimbratura()" disabled class="bg-slate-700/60 text-slate-300 font-medium py-2.5 px-4 rounded-xl text-sm transition-all disabled:opacity-50 flex items-center justify-center space-x-1.5">
-                                    <i data-lucide="square" class="w-4 h-4"></i>
-                                    <span>Esci</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Lista interattiva dei colleghi -->
+                <div id="colleghi-lista-container" class="space-y-2 mb-6">
+                    <!-- Popolato da JS -->
                 </div>
 
-                <!-- Tabella Pianificazione Settimanale & Giustificativi Diretti -->
-                <div class="lg:col-span-8 space-y-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div class="flex items-center justify-between pb-6 border-b border-slate-100">
-                            <div>
-                                <h2 class="text-lg font-bold text-slate-900">Calendario e Giustificativi Settimanali</h2>
-                                <p class="text-sm text-slate-500">Inserisci i tuoi orari oppure seleziona direttamente un giustificativo per il giorno</p>
-                            </div>
-                        </div>
-
-                        <div class="overflow-x-auto mt-6">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                        <th class="pb-3 px-3">Giorno</th>
-                                        <th class="pb-3 px-3">Orari (Mattina / Pomeriggio)</th>
-                                        <th class="pb-3 px-3">Giustificativo / Assenza</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="orari-table-body" class="divide-y divide-slate-50 text-sm">
-                                    <!-- Generato da JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div class="mt-6 flex justify-end">
-                            <button onclick="salvaPianificazione()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center space-x-2">
-                                <i data-lucide="save" class="w-4 h-4"></i>
-                                <span>Salva Pianificazione</span>
-                            </button>
-                        </div>
-                    </div>
+                <!-- Input aggiungi collega -->
+                <div class="pt-4 border-t border-slate-100 flex gap-2">
+                    <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="flex-grow bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="aggiungiCollega()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center justify-center">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    </button>
                 </div>
-
             </div>
         </div>
 
-        <!-- SEZIONE 2: GESTIONE COLLEGHI -->
-        <div id="sezione-colleghi" class="space-y-6 hidden">
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 max-w-4xl mx-auto">
-                <div class="flex items-center justify-between pb-6 border-b border-slate-100">
+        <!-- COLONNA DESTRA: Calendario Settimanale Visivo -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-100 gap-4">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">Elenco Colleghi e Team</h2>
-                        <p class="text-sm text-slate-500">Aggiungi o rimuovi i membri abilitati all'inserimento</p>
+                        <span id="label-collega-corrente" class="text-xs font-bold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded-lg">Seleziona un collega</span>
+                        <h2 class="text-xl font-bold text-slate-900 mt-1">Calendario Settimanale</h2>
                     </div>
-                </div>
-
-                <div class="flex gap-4 my-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 items-end">
-                    <div class="flex-grow">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nome e Cognome del Collega</label>
-                        <input type="text" id="nuovo-collega-nome" placeholder="Es. Mario Rossi" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                    <button onclick="aggiungiCollega()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-xl text-sm shadow-sm flex items-center space-x-1.5 h-10">
-                        <i data-lucide="user-plus" class="w-4 h-4"></i>
-                        <span>Aggiungi</span>
+                    <button onclick="salvaCalendario()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center justify-center space-x-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Salva Modifiche</span>
                     </button>
                 </div>
 
-                <div id="colleghi-list-container" class="space-y-3">
-                    <!-- Popolato da JS -->
+                <!-- Griglia Calendario Settimanale -->
+                <div id="calendario-griglia" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <!-- Generato dinamicamente via JS -->
                 </div>
             </div>
         </div>
@@ -173,117 +107,98 @@
         lucide.createIcons();
 
         let colleghi = JSON.parse(localStorage.getItem('team_colleghi')) || ['Marco Lotti', 'Luana Andreoni', 'Maria Rossi'];
+        let collegaSelezionato = colleghi[0] || '';
         let giorniSettimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
-        
-        // Struttura dati orari e giustificativi per ogni collega e giorno
         let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || {};
 
-        let timerInterval = null;
-        let secondiTrascorsi = 0;
-        let inServizio = false;
-
         window.addEventListener('DOMContentLoaded', () => {
-            aggiornaSelectColleghi();
-            costruisciTabellaCalendario();
-            renderColleghiList();
-
-            // Ascolta cambio utente per ricaricare la sua tabella personale
-            document.getElementById('colleague-select').addEventListener('change', costruisciTabellaCalendario);
+            renderColleghi();
+            renderCalendario();
         });
 
-        function mostraSezione(sezione) {
-            ['calendario', 'colleghi'].forEach(s => {
-                document.getElementById(`sezione-${s}`).classList.add('hidden');
-            });
-            document.getElementById(`sezione-${sezione}`).classList.remove('hidden');
+        function renderColleghi() {
+            const container = document.getElementById('colleghi-lista-container');
+            if (colleghi.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">Nessun collega inserito.</p>`;
+                return;
+            }
+            container.innerHTML = colleghi.map(c => {
+                const attivo = c === collegaSelezionato;
+                return `
+                    <div onclick="selezionaCollega('${c}')" class="flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${attivo ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 font-medium' : 'bg-slate-50 hover:bg-slate-100 text-slate-700'}">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full ${attivo ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-600'} flex items-center font-bold text-xs justify-center">${c.charAt(0)}</div>
+                            <span class="text-sm">${c}</span>
+                        </div>
+                        ${colleghi.length > 1 ? `<button onclick="event.stopPropagation(); rimuoviCollega('${c}')" class="${attivo ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-rose-600'} p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function selezionaCollega(nome) {
+            collegaSelezionato = nome;
+            renderColleghi();
+            renderCalendario();
+        }
+
+        function renderCalendario() {
+            document.getElementById('label-collega-corrente').innerText = collegaSelezionato ? `Dipendente: ${collegaSelezionato}` : 'Nessun collega';
             
-            ['calendario', 'colleghi'].forEach(s => {
-                const btn = document.getElementById(`nav-${s}`);
-                if (btn) {
-                    if (s === sezione) {
-                        btn.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-all bg-white text-indigo-600 shadow-sm";
-                    } else {
-                        btn.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900";
-                    }
-                }
-            });
-        }
+            if (!collegaSelezionato) {
+                document.getElementById('calendario-griglia').innerHTML = '';
+                return;
+            }
 
-        function aggiornaSelectColleghi() {
-            const sel = document.getElementById('colleague-select');
-            const corrente = sel.value;
-            sel.innerHTML = colleghi.map(c => `<option value="${c}">${c}</option>`).join('');
-            if(colleghi.includes(corrente)) sel.value = corrente;
-        }
-
-        function getUtenteCorrente() {
-            return document.getElementById('colleague-select').value || colleghi[0];
-        }
-
-        function costruisciTabellaCalendario() {
-            const utente = getUtenteCorrente();
-            if (!pianificazione[utente]) {
-                pianificazione[utente] = {
-                    'Lunedì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30', giustificativo: '' },
-                    'Martedì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30', giustificativo: '' },
-                    'Mercoledì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30', giustificativo: '' },
-                    'Giovedì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30', giustificativo: '' },
-                    'Venerdì': { mIn: '08:30', mOut: '14:00', pIn: '15:00', pOut: '17:30', giustificativo: '' },
-                    'Sabato': { mIn: '', mOut: '', pIn: '', pOut: '', giustificativo: '' },
-                    'Domenica': { mIn: '', mOut: '', pIn: '', pOut: '', giustificativo: '' }
+            if (!pianificazione[collegaSelezionato]) {
+                pianificazione[collegaSelezionato] = {
+                    'Lunedì': '', 'Martedì': '', 'Mercoledì': '', 'Giovedì': '', 'Venerdì': '', 'Sabato': '', 'Domenica': ''
                 };
             }
 
-            const tbody = document.getElementById('orari-table-body');
-            tbody.innerHTML = '';
-            
-            giorniSettimana.forEach(giorno => {
-                let d = pianificazione[utente][giorno];
-                let tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/50 transition-colors";
-                tr.innerHTML = `
-                    <td class="py-3.5 px-3 font-medium text-slate-700">${giorno}</td>
-                    <td class="py-3.5 px-3">
-                        <div class="flex items-center space-x-2">
-                            <input type="time" value="${d.mIn}" id="${giorno}-mIn" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
-                            <span class="text-slate-400">-</span>
-                            <input type="time" value="${d.mOut}" id="${giorno}-mOut" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
-                            <span class="text-slate-300">|</span>
-                            <input type="time" value="${d.pIn}" id="${giorno}-pIn" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
-                            <span class="text-slate-400">-</span>
-                            <input type="time" value="${d.pOut}" id="${giorno}-pOut" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
+            const griglia = document.getElementById('calendario-griglia');
+            griglia.innerHTML = giorniSettimana.map(giorno => {
+                let giust = pianificazione[collegaSelezionato][giorno] || '';
+                
+                // Colori badge in base al tipo di giustificativo
+                let badgeColor = "bg-slate-50 border-slate-200 text-slate-600";
+                if(giust === 'Ferie') badgeColor = "bg-amber-50 border-amber-200 text-amber-700";
+                if(giust === 'Permesso') badgeColor = "bg-blue-50 border-blue-200 text-blue-700";
+                if(giust === 'Malattia') badgeColor = "bg-rose-50 border-rose-200 text-rose-700";
+                if(giust === 'Smart Working') badgeColor = "bg-emerald-50 border-emerald-200 text-emerald-700";
+
+                return `
+                    <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-4 flex flex-col justify-between space-y-3 transition-all hover:border-indigo-200">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-800 text-sm">${giorno}</span>
+                            <span class="text-xs text-slate-400 font-medium">Presenza standard / Assenza</span>
                         </div>
-                    </td>
-                    <td class="py-3.5 px-3">
-                        <select id="${giorno}-giust" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="">-- Lavorativo standard --</option>
-                            <option value="Ferie" ${d.giustificativo === 'Ferie' ? 'selected' : ''}>🏖️ Ferie</option>
-                            <option value="Permesso" ${d.giustificativo === 'Permesso' ? 'selected' : ''}>⏱️ Permesso</option>
-                            <option value="Malattia" ${d.giustificativo === 'Malattia' ? 'selected' : ''}>🏥 Malattia</option>
-                            <option value="Smart Working" ${d.giustificativo === 'Smart Working' ? 'selected' : ''}>💻 Smart Working</option>
-                        </select>
-                    </td>
+                        <div>
+                            <select id="giorno-${giorno}" onchange="aggiornaStatoGiorno('${giorno}', this.value)" class="w-full bg-white border ${giust ? badgeColor : 'border-slate-200 text-slate-700'} rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-colors">
+                                <option value="" ${!giust ? 'selected' : ''}>🏢 In Ufficio (Lavorativo)</option>
+                                <option value="Ferie" ${giust === 'Ferie' ? 'selected' : ''}>🏖️ Ferie</option>
+                                <option value="Permesso" ${giust === 'Permesso' ? 'selected' : ''}>⏱️ Permesso</option>
+                                <option value="Malattia" ${giust === 'Malattia' ? 'selected' : ''}>🏥 Malattia</option>
+                                <option value="Smart Working" ${giust === 'Smart Working' ? 'selected' : ''}>💻 Smart Working</option>
+                            </select>
+                        </div>
+                    </div>
                 `;
-                tbody.appendChild(tr);
-            });
+            }).join('');
         }
 
-        function salvaPianificazione() {
-            const utente = getUtenteCorrente();
-            giorniSettimana.forEach(giorno => {
-                pianificazione[utente][giorno] = {
-                    mIn: document.getElementById(`${giorno}-mIn`).value,
-                    mOut: document.getElementById(`${giorno}-mOut`).value,
-                    pIn: document.getElementById(`${giorno}-pIn`).value,
-                    pOut: document.getElementById(`${giorno}-pOut`).value,
-                    giustificativo: document.getElementById(`${giorno}-giust`).value
-                };
-            });
+        function aggiornaStatoGiorno(giorno, valore) {
+            if(!pianificazione[collegaSelezionato]) pianificazione[collegaSelezionato] = {};
+            pianificazione[collegaSelezionato][giorno] = valore;
+            renderCalendario(); // Ridisegna per aggiornare i colori al volo
+        }
+
+        function salvaCalendario() {
             localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
-            alert('Pianificazione e giustificativi salvati con successo per ' + utente + '!');
+            alert('Calendario aggiornato con successo per ' + collegaSelezionato + '!');
         }
 
-        // Gestione Colleghi
         function aggiungiCollega() {
             const input = document.getElementById('nuovo-collega-nome');
             const nome = input.value.trim();
@@ -293,59 +208,18 @@
             colleghi.push(nome);
             localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
             input.value = '';
-            aggiornaSelectColleghi();
-            renderColleghiList();
-            costruisciTabellaCalendario();
+            collegaSelezionato = nome; // Seleziona subito il nuovo collega
+            renderColleghi();
+            renderCalendario();
         }
 
         function rimuoviCollega(nome) {
             if(colleghi.length <= 1) { alert('Impossibile rimuovere tutti i colleghi'); return; }
             colleghi = colleghi.filter(c => c !== nome);
             localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
-            aggiornaSelectColleghi();
-            renderColleghiList();
-            costruisciTabellaCalendario();
-        }
-
-        function renderColleghiList() {
-            const container = document.getElementById('colleghi-list-container');
-            container.innerHTML = colleghi.map(c => `
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 text-sm">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center font-bold text-xs justify-center">${c.charAt(0)}</div>
-                        <span class="font-semibold text-slate-800">${c}</span>
-                    </div>
-                    <button onclick="rimuoviCollega('${c}')" class="text-rose-500 hover:text-rose-700 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        // Cronometro
-        function avviaTimbratura() {
-            if (inServizio) return;
-            inServizio = true;
-            document.getElementById('btn-start').disabled = true;
-            document.getElementById('btn-stop').disabled = false;
-            document.getElementById('timer-status').innerText = "Stato: In servizio";
-            timerInterval = setInterval(() => {
-                secondiTrascorsi++;
-                let ore = Math.floor(secondiTrascorsi / 3600).toString().padStart(2, '0');
-                let min = Math.floor((secondiTrascorsi % 3600) / 60).toString().padStart(2, '0');
-                let sec = (secondiTrascorsi % 60).toString().padStart(2, '0');
-                document.getElementById('timer-display').innerText = `${ore}:${min}:${sec}`;
-            }, 1000);
-        }
-
-        function fermaTimbratura() {
-            if (!inServizio) return;
-            clearInterval(timerInterval);
-            inServizio = false;
-            document.getElementById('btn-start').disabled = false;
-            document.getElementById('btn-stop').disabled = true;
-            document.getElementById('timer-status').innerText = "Stato: Turno completato";
-            secondiTrascorsi = 0;
-            document.getElementById('timer-display').innerText = "00:00:00";
+            if(collegaSelezionato === nome) collegaSelezionato = colleghi[0];
+            renderColleghi();
+            renderCalendario();
         }
 
         // Config Firebase
