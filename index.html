@@ -4,19 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PresenzeTeam - Timeline, Mese & Piano Ferie</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter & Icone Lucide -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; background-color: #f4f7fc; }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7fc; }
         .timeline-scroll { -webkit-overflow-scrolling: touch; }
-        .ico { display: inline-flex; align-items: center; justify-content: center; }
-        .ico svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        .swatch { width: 28px; height: 28px; border-radius: 9999px; border: 3px solid transparent; cursor: pointer; }
-        .swatch.sel { border-color: #0f172a; }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
@@ -25,52 +21,59 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="bg-indigo-600 text-white p-2.5 rounded-2xl shadow-md flex items-center justify-center">
-                    <span class="ico w-5 h-5" data-icon="clock"></span>
+                    <i data-lucide="clock" class="w-5 h-5"></i>
                 </div>
                 <div>
                     <h1 class="font-bold text-base sm:text-lg text-slate-900 leading-tight">PresenzeTeam</h1>
                     <p class="text-[11px] text-slate-500">Timeline & Piano Ferie</p>
                 </div>
             </div>
-
+            
+            <!-- Tab di Navigazione Principale -->
             <div class="hidden sm:flex items-center space-x-1 bg-slate-100 p-1 rounded-2xl">
                 <button onclick="mostraTab('timeline')" id="btn-tab-timeline" class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all bg-white text-indigo-600 shadow-sm">Timeline Presenze</button>
                 <button onclick="mostraTab('ferie2027')" id="btn-tab-ferie2027" class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-slate-900">🏖️ Piano Ferie 2027</button>
             </div>
 
             <div class="flex items-center space-x-2">
-                <button id="firebase-status" onclick="clickBadge()" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Locale</button>
-                <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl transition-colors" title="Impostazioni e backup">
-                    <span class="ico w-4 h-4" data-icon="settings"></span>
+                <span id="firebase-status" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale
+                </span>
+                <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl text-sm transition-colors" title="Configura Firebase">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Menu mobile -->
+    <!-- Menu mobile per cambio tab -->
     <div class="sm:hidden bg-white border-b border-slate-200 px-4 py-2 flex justify-around text-xs font-semibold">
         <button onclick="mostraTab('timeline')" id="mob-tab-timeline" class="text-indigo-600">Timeline</button>
         <button onclick="mostraTab('ferie2027')" id="mob-tab-ferie2027" class="text-slate-600">🏖️ Piano Ferie</button>
     </div>
 
+    <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
-
-        <!-- SEZIONE 1: TIMELINE -->
+        
+        <!-- SEZIONE 1: TIMELINE (Settimanale o Mensile) -->
         <div id="sezione-timeline" class="space-y-6">
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center space-x-3 mb-2 flex-wrap gap-2">
+                        <!-- Switch Vista Settimanale / Mensile -->
                         <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
                             <button onclick="impostaVista('settimana')" id="btn-vista-settimana" class="px-3 py-1 rounded-lg text-xs font-bold transition-all bg-white text-indigo-600 shadow-sm">Settimana</button>
                             <button onclick="impostaVista('mese')" id="btn-vista-mese" class="px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">Mese</button>
                         </div>
+
+                        <!-- Frecce di Navigazione Tempo -->
                         <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
-                            <button onclick="cambiaTempo(-1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors" title="Precedente">
-                                <span class="ico w-4 h-4" data-icon="chevron-left"></span>
+                            <button onclick="cambiaTempo(-1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors shadow-sm" title="Precedente">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
                             </button>
                             <span id="label-periodo-corrente" class="text-xs font-bold text-indigo-600 uppercase tracking-wider px-3">Periodo</span>
-                            <button onclick="cambiaTempo(1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors" title="Successivo">
-                                <span class="ico w-4 h-4" data-icon="chevron-right"></span>
+                            <button onclick="cambiaTempo(1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors shadow-sm" title="Successivo">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
                             </button>
                         </div>
                         <button onclick="vaiOggi()" class="text-xs text-slate-500 hover:text-indigo-600 font-medium underline">Oggi</button>
@@ -78,60 +81,71 @@
                     <h2 class="text-2xl font-bold text-slate-900">Pianificazione Team</h2>
                 </div>
 
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
-                        <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="bg-transparent px-3 py-1.5 text-sm focus:outline-none w-40 sm:w-48" onkeydown="if(event.key==='Enter')aggiungiCollega()">
+                        <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="bg-transparent px-3 py-1.5 text-sm focus:outline-none w-40 sm:w-48">
                         <button onclick="aggiungiCollega()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 whitespace-nowrap">
-                            <span class="ico w-4 h-4" data-icon="user-plus"></span>
+                            <i data-lucide="user-plus" class="w-4 h-4"></i>
                             <span>Aggiungi</span>
                         </button>
                     </div>
-                    <button onclick="apriModalGiustificativi()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-center space-x-2">
-                        <span class="ico w-4 h-4" data-icon="tag"></span>
-                        <span>Giustificativi</span>
-                    </button>
-                    <button onclick="salvaTutto(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
-                        <span class="ico w-4 h-4" data-icon="save"></span>
+                    <button onclick="salvaTutto()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
                         <span>Salva</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Legenda dinamica -->
-            <div id="legenda" class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600"></div>
+            <!-- Legenda Stati -->
+            <div class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600">
+                <span class="text-slate-400">Stati:</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">🏢 Ufficio</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 border border-purple-200">🏖️ Ferie</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-100 text-blue-700 border border-blue-200">⏱️ Permesso</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200">🏥 Malattia</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">💻 Smart Working</span>
+            </div>
 
+            <!-- Timeline / Tabella Principale -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="timeline-scroll overflow-x-auto">
-                    <table id="tabella-timeline" class="w-full text-left border-collapse" style="min-width:800px">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
-                            <tr id="timeline-header" class="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider"></tr>
+                            <tr id="timeline-header" class="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <!-- Generato dinamicamente -->
+                            </tr>
                         </thead>
-                        <tbody id="timeline-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                        <tbody id="timeline-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Generato via JavaScript -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- SEZIONE 2: PIANO FERIE 2027 -->
+        <!-- SEZIONE 2: PIANO FERIE 2027 (ANNO INTERO) -->
         <div id="sezione-ferie2027" class="space-y-6 hidden">
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center space-x-2 text-purple-600 font-semibold text-xs uppercase tracking-wider mb-1">
-                        <span class="ico w-3.5 h-3.5" data-icon="calendar-range"></span>
+                        <i data-lucide="calendar-range" class="w-3.5 h-3.5"></i>
                         <span>Programmazione Annua</span>
                     </div>
                     <h2 class="text-2xl font-bold text-slate-900">Piano Ferie 2027</h2>
                 </div>
-                <button onclick="salvaTutto(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
-                    <span class="ico w-4 h-4" data-icon="save"></span>
+                <button onclick="salvaTutto()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
+                    <i data-lucide="save" class="w-4 h-4"></i>
                     <span>Salva Piano Ferie</span>
                 </button>
             </div>
 
+            <!-- Form Inserimento Periodo Ferie 2027 -->
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Dipendente</label>
-                    <select id="ferie-collega-select" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
+                    <select id="ferie-collega-select" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <!-- Popolato da JS -->
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Data Inizio (2027)</label>
@@ -143,12 +157,13 @@
                 </div>
                 <div>
                     <button onclick="aggiungiPeriodoFerie2027()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-2.5 rounded-2xl text-sm transition-all shadow-md shadow-purple-100 flex items-center justify-center space-x-1.5">
-                        <span class="ico w-4 h-4" data-icon="plus-circle"></span>
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
                         <span>Aggiungi Ferie 2027</span>
                     </button>
                 </div>
             </div>
 
+            <!-- Tabella Riepilogo Ferie 2027 Programmate -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden p-6 space-y-4">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Periodi di Ferie Pianificati per il 2027</h3>
                 <div class="overflow-x-auto">
@@ -161,503 +176,306 @@
                                 <th class="py-3 px-4 text-right">Azioni</th>
                             </tr>
                         </thead>
-                        <tbody id="tabella-ferie2027-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                        <tbody id="tabella-ferie2027-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Popolato via JS -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
     </main>
 
-    <!-- Modal cambio stato giorno -->
+    <!-- Modal Cambio Stato Rapido (Timeline) -->
     <div id="modal-stato" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between">
                 <h3 id="modal-title" class="text-base font-bold text-slate-900">Modifica Stato</h3>
-                <button onclick="chiudiModalStato()" class="text-slate-400 hover:text-slate-600 p-1"><span class="ico w-5 h-5" data-icon="x"></span></button>
+                <button onclick="chiudiModalStato()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <p id="modal-subtitle" class="text-xs text-slate-500">Seleziona lo stato per questo giorno:</p>
-            <div id="modal-opzioni" class="grid grid-cols-1 gap-2.5 pt-2"></div>
-            <button onclick="chiudiModalStato(); apriModalGiustificativi();" class="w-full text-xs text-indigo-600 hover:underline pt-1">+ Crea un nuovo giustificativo</button>
-        </div>
-    </div>
-
-    <!-- Modal gestione giustificativi -->
-    <div id="modal-giust" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-slate-900">Giustificativi</h3>
-                <button onclick="chiudiModalGiustificativi()" class="text-slate-400 hover:text-slate-600 p-1"><span class="ico w-5 h-5" data-icon="x"></span></button>
-            </div>
-
-            <div id="lista-giust" class="space-y-2"></div>
-
-            <div class="border-t border-slate-100 pt-4 space-y-3">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nuovo giustificativo</h4>
-                <div class="flex gap-2">
-                    <input type="text" id="giust-emoji" maxlength="4" placeholder="🎓" class="w-16 text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <input type="text" id="giust-nome" maxlength="30" placeholder="Es. Formazione, Trasferta..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Colore</label>
-                    <div id="giust-colori" class="flex flex-wrap gap-2"></div>
-                </div>
-                <button onclick="aggiungiGiustificativo()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center space-x-1.5">
-                    <span class="ico w-4 h-4" data-icon="plus-circle"></span>
-                    <span>Aggiungi giustificativo</span>
+            
+            <div class="grid grid-cols-1 gap-2.5 pt-2">
+                <button onclick="selezionaStatoDaModal('')" class="flex items-center space-x-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                    <span>🏢 In Ufficio (Standard)</span>
+                </button>
+                <button onclick="selezionaStatoDaModal('Ferie')" class="flex items-center space-x-3 p-3 rounded-2xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+                    <span>🏖️ Ferie</span>
+                </button>
+                <button onclick="selezionaStatoDaModal('Permesso')" class="flex items-center space-x-3 p-3 rounded-2xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span>⏱️ Permesso</span>
+                </button>
+                <button onclick="selezionaStatoDaModal('Malattia')" class="flex items-center space-x-3 p-3 rounded-2xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                    <span>🏥 Malattia</span>
+                </button>
+                <button onclick="selezionaStatoDaModal('Smart Working')" class="flex items-center space-x-3 p-3 rounded-2xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                    <span>💻 Smart Working</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal impostazioni / backup -->
+    <!-- Modal Configurazione Firebase -->
     <div id="config-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-slate-900">Impostazioni e backup</h3>
-                <button onclick="chiudiConfigModal()" class="text-slate-400 hover:text-slate-600 p-1"><span class="ico w-5 h-5" data-icon="x"></span></button>
-            </div>
-
-            <div class="space-y-2">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Backup dati</h4>
-                <p class="text-xs text-slate-500">I dati vivono nel browser di questo dispositivo. Esporta un file per spostarli o condividerli con il team.</p>
-                <div class="flex gap-2">
-                    <button onclick="esportaDati()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-xl text-sm">Esporta JSON</button>
-                    <label class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-xl text-sm text-center cursor-pointer">
-                        Importa JSON
-                        <input type="file" accept="application/json" class="hidden" onchange="importaDati(event)">
-                    </label>
-                </div>
-            </div>
-
-            <div class="space-y-2 border-t border-slate-100 pt-4">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Firebase (opzionale)</h4>
-                <p class="text-xs text-slate-500">Incolla la configurazione web app del tuo progetto se vuoi cambiarla al volo.</p>
-                <textarea id="firebase-config-input" rows="5" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "...", ... };'></textarea>
-                <div class="flex justify-end space-x-3">
-                    <button onclick="chiudiConfigModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Chiudi</button>
-                    <button onclick="salvaConfigFirebase()" class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl">Salva</button>
-                </div>
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-slate-900">Configurazione Firebase (Opzionale)</h3>
+            <p class="text-xs text-slate-500">Incolla qui la configurazione JSON di Firebase per sincronizzare in tempo reale.</p>
+            <textarea id="firebase-config-input" rows="6" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='{ apiKey: "...", projectId: "..." }'></textarea>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="chiudiModalStato()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Annulla</button>
+                <button onclick="salvaConfigFirebase()" class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl">Salva</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal login (solo password) -->
-    <div id="modal-login" class="fixed inset-0 bg-slate-100 z-[60] flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl border border-slate-100 space-y-5 text-center">
-            <div class="mx-auto bg-indigo-600 text-white w-12 h-12 rounded-2xl shadow-md flex items-center justify-center text-xl">🔒</div>
-            <div>
-                <h3 class="text-lg font-bold text-slate-900">PresenzeTeam</h3>
-                <p class="text-xs text-slate-500 mt-1">Inserisci la password del team per continuare.</p>
-            </div>
-            <input type="password" id="login-password" autocomplete="current-password" placeholder="Password" onkeydown="if(event.key==='Enter')accedi()" class="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <p id="login-errore" class="text-xs text-rose-600 min-h-[1rem]"></p>
-            <button onclick="accedi()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-colors">Entra</button>
-        </div>
-    </div>
-
+    <!-- Script Applicativo -->
     <script>
-    
+        lucide.createIcons();
 
-        /* ---------- Icone SVG inline ---------- */
-        const ICONE = {
-            'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
-            'settings': '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
-            'calendar-range': '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
-            'save': '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',
-            'user-plus': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>',
-            'chevron-left': '<polyline points="15 18 9 12 15 6"/>',
-            'chevron-right': '<polyline points="9 18 15 12 9 6"/>',
-            'plus-circle': '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',
-            'trash-2': '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
-            'x': '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
-            'tag': '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>'
-        };
-        function idratIcone(root) {
-            (root || document).querySelectorAll('[data-icon]').forEach(el => {
-                const p = ICONE[el.dataset.icon];
-                if (p && !el.firstChild) el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>';
-            });
-        }
-
-        /* ---------- Utilità ---------- */
-        function esc(s) {
-            return String(s).replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'''}[c]));
-        }
-        function pad(n) { return String(n).padStart(2, '0'); }
-        function dataKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
-        function leggi(chiave, fallback) {
-            try { const v = JSON.parse(localStorage.getItem(chiave)); return v ?? fallback; } catch (e) { return fallback; }
-        }
-
-        /* ---------- Stato ---------- */
-        const GIUST_DEFAULT = [
-            { id: 'Ferie', nome: 'Ferie', emoji: '🏖️', colore: '#a855f7', fisso: true },
-            { id: 'Permesso', nome: 'Permesso', emoji: '⏱️', colore: '#3b82f6', fisso: true },
-            { id: 'AltriPermessi', nome: 'Altri permessi', emoji: '📝', colore: '#f59e0b', fisso: true },
-            { id: 'Smart Working', nome: 'Smart Working', emoji: '💻', colore: '#10b981', fisso: true }
-        ];
-        const PALETTE = ['#a855f7','#3b82f6','#f43f5e','#10b981','#f59e0b','#06b6d4','#ec4899','#f97316','#84cc16','#64748b','#14b8a6','#6366f1'];
-
-        let colleghi = leggi('team_colleghi', ['Marco Lotti', 'Luana Andreoni', 'Maria Rossi']);
-        let pianificazione = leggi('team_pianificazione', {});
-        let pianoFerie2027 = leggi('team_ferie_2027', []);
-        let giustCustom = leggi('team_giustificativi', []);
+        let colleghi = JSON.parse(localStorage.getItem('team_colleghi')) || ['Marco Lotti', 'Luana Andreoni', 'Maria Rossi'];
+        let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || {};
+        let pianoFerie2027 = JSON.parse(localStorage.getItem('team_ferie_2027')) || [];
 
         let cellaAttiva = { collega: '', dataKey: '' };
-        let vistaCorrente = 'settimana';
-        let offsetTempo = 0;
-        let colonneCorrenti = [];
-        let coloreScelto = PALETTE[4];
+        let vistaCorrente = 'settimana'; // 'settimana' o 'mese'
+        let offsetTempo = 0; // Offset settimane o mesi
 
-        function migraMalattia(mappa) {
-            let cambiato = false;
-            Object.values(mappa || {}).forEach(giorni => {
-                Object.keys(giorni).forEach(k => { if (giorni[k] === 'Malattia') { giorni[k] = 'AltriPermessi'; cambiato = true; } });
-            });
-            return cambiato;
-        }
-        migraMalattia(pianificazione);
-
-        function tuttiGiust() { return GIUST_DEFAULT.concat(giustCustom); }
-        function trovaGiust(id) { return tuttiGiust().find(g => g.id === id); }
-
-        /* ---------- Tab ---------- */
         function mostraTab(tab) {
-            const t = tab === 'timeline';
-            document.getElementById('sezione-timeline').classList.toggle('hidden', !t);
-            document.getElementById('sezione-ferie2027').classList.toggle('hidden', t);
-            document.getElementById('btn-tab-timeline').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all " + (t ? "bg-white text-indigo-600 shadow-sm" : "text-slate-600 hover:text-slate-900");
-            document.getElementById('btn-tab-ferie2027').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all " + (!t ? "bg-white text-purple-600 shadow-sm" : "text-slate-600 hover:text-slate-900");
-            document.getElementById('mob-tab-timeline').className = t ? "text-indigo-600" : "text-slate-600";
-            document.getElementById('mob-tab-ferie2027').className = !t ? "text-purple-600" : "text-slate-600";
-            if (!t) { aggiornaSelectFerieColleghi(); renderTabellaFerie2027(); }
+            if(tab === 'timeline') {
+                document.getElementById('sezione-timeline').classList.remove('hidden');
+                document.getElementById('sezione-ferie2027').classList.add('hidden');
+                document.getElementById('btn-tab-timeline').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all bg-white text-indigo-600 shadow-sm";
+                document.getElementById('btn-tab-ferie2027').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-slate-900";
+            } else {
+                document.getElementById('sezione-timeline').classList.add('hidden');
+                document.getElementById('sezione-ferie2027').classList.remove('hidden');
+                document.getElementById('btn-tab-timeline').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-slate-900";
+                document.getElementById('btn-tab-ferie2027').className = "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all bg-white text-purple-600 shadow-sm";
+                aggiornaSelectFerieColleghi();
+                renderTabellaFerie2027();
+            }
         }
 
-        function formattaDataItaliana(iso) {
-            if (!iso) return '';
-            const p = iso.split('-');
-            if (p.length !== 3) return iso;
-            const mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-            return `${p[2]} ${mesi[parseInt(p[1], 10) - 1]} ${p[0]}`;
+        function formattaDataItaliana(isoString) {
+            if (!isoString) return '';
+            let parti = isoString.split('-');
+            if (parti.length !== 3) return isoString;
+            let anno = parti[0];
+            let meseIdx = parseInt(parti[1], 10) - 1;
+            let giorno = parti[2];
+            
+            let mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            return `${giorno} ${mesi[meseIdx]} ${anno}`;
         }
 
-        /* ---------- Viste ---------- */
         function impostaVista(tipo) {
             vistaCorrente = tipo;
             offsetTempo = 0;
-            const sett = tipo === 'settimana';
-            document.getElementById('btn-vista-settimana').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all " + (sett ? "bg-white text-indigo-600 shadow-sm" : "text-slate-600 hover:text-slate-900");
-            document.getElementById('btn-vista-mese').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all " + (!sett ? "bg-white text-indigo-600 shadow-sm" : "text-slate-600 hover:text-slate-900");
+            if(tipo === 'settimana') {
+                document.getElementById('btn-vista-settimana').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all bg-white text-indigo-600 shadow-sm";
+                document.getElementById('btn-vista-mese').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+            } else {
+                document.getElementById('btn-vista-settimana').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+                document.getElementById('btn-vista-mese').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all bg-white text-indigo-600 shadow-sm";
+            }
             aggiornaVistaTempo();
         }
 
         function getColonnaGiorni() {
-            const giorni = [];
-            const mesiNomi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-            const mesiBrevi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-            const giorniBrevi = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
-            const giorniLunghi = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
-            const oggiKey = dataKey(new Date());
-            const crea = (d, label) => {
-                const k = dataKey(d);
-                return { label, dataKey: k, dow: giorniBrevi[d.getDay()], num: d.getDate(),
-                         oggi: k === oggiKey, festivo: festivoDel(d), lunedi: d.getDay() === 1 };
-            };
+            let giorni = [];
+            let mesiNomi = ['Gennaio', Feb = 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            let mesiBrevi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            let nomiGiorniBrevi = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
 
             if (vistaCorrente === 'settimana') {
-                const oggi = new Date();
-                const wd = oggi.getDay();
-                const lunedi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + (wd === 0 ? -6 : 1 - wd) + offsetTempo * 7);
+                let curr = new Date();
+                let day = curr.getDay();
+                let diff = curr.getDate() - day + (day == 0 ? -6 : 1);
+                let lunedi = new Date(curr.setDate(diff));
+                lunedi.setDate(lunedi.getDate() + (offsetTempo * 7));
+
                 for (let i = 0; i < 5; i++) {
-                    const d = new Date(lunedi.getFullYear(), lunedi.getMonth(), lunedi.getDate() + i);
-                    giorni.push(crea(d, `${giorniLunghi[i]} ${d.getDate()} ${mesiBrevi[d.getMonth()]}`));
+                    let d = new Date(lunedi);
+                    d.setDate(lunedi.getDate() + i);
+                    let nomeGiorno = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'][i];
+                    let dataKey = d.toISOString().split('T')[0];
+                    giorni.push({
+                        label: `${nomeGiorno} ${d.getDate()} ${mesiBrevi[d.getMonth()]} ${d.getFullYear()}`,
+                        dataKey: dataKey
+                    });
                 }
-                const f = new Date(lunedi.getFullYear(), lunedi.getMonth(), lunedi.getDate() + 4);
-                document.getElementById('label-periodo-corrente').innerText =
-                    `${lunedi.getDate()} ${mesiBrevi[lunedi.getMonth()]} — ${f.getDate()} ${mesiBrevi[f.getMonth()]} ${f.getFullYear()}`;
+                let primo = giorni[0].label;
+                let ultimo = giorni[4].label;
+                document.getElementById('label-periodo-corrente').innerText = `${primo} — ${ultimo}`;
+
             } else {
-                const base = new Date(new Date().getFullYear(), new Date().getMonth() + offsetTempo, 1);
-                const anno = base.getFullYear(), mese = base.getMonth();
+                // Vista Mensile
+                let dataBase = new Date();
+                dataBase.setMonth(dataBase.getMonth() + offsetTempo);
+                let anno = dataBase.getFullYear();
+                let mese = dataBase.getMonth();
+
                 document.getElementById('label-periodo-corrente').innerText = `${mesiNomi[mese]} ${anno}`;
-                const n = new Date(anno, mese + 1, 0).getDate();
-                for (let g = 1; g <= n; g++) {
-                    const d = new Date(anno, mese, g);
+
+                let giorniNelMese = new Date(anno, mese + 1, 0).getDate();
+                for (let giorno = 1; giorno <= giorniNelMese; giorno++) {
+                    let d = new Date(anno, mese, giorno);
+                    // Escludi Sabato (6) e Domenica (0) se vuoi mostrare solo lavorativi, oppure includili tutti
                     if (d.getDay() !== 0 && d.getDay() !== 6) {
-                        giorni.push(crea(d, `${giorniBrevi[d.getDay()]} ${g} ${mesiBrevi[mese]}`));
+                        let dataKey = d.toISOString().split('T')[0];
+                        let nomeBreveGiorno = nomiGiorniBrevi[d.getDay()];
+                        giorni.push({
+                            label: `${nomeBreveGiorno} ${giorno} ${mesiBrevi[mese]}`,
+                            dataKey: dataKey
+                        });
                     }
                 }
             }
             return giorni;
         }
 
-        /* ---------- Festività italiane ---------- */
-        const cacheFestivi = {};
-        function pasqua(a) {
-            const A = a % 19, B = Math.floor(a / 100), C = a % 100, D = Math.floor(B / 4), E = B % 4;
-            const F = Math.floor((B + 8) / 25), G = Math.floor((B - F + 1) / 3);
-            const H = (19 * A + B - D - G + 15) % 30, I = Math.floor(C / 4), K = C % 4;
-            const L = (32 + 2 * E + 2 * I - H - K) % 7, M = Math.floor((A + 11 * H + 22 * L) / 451);
-            const mese = Math.floor((H + L - 7 * M + 114) / 31), giorno = ((H + L - 7 * M + 114) % 31) + 1;
-            return new Date(a, mese - 1, giorno);
-        }
-        function festiviAnno(a) {
-            if (cacheFestivi[a]) return cacheFestivi[a];
-            const f = {};
-            const fissi = [['01-01','Capodanno'],['01-06','Epifania'],['04-25','Liberazione'],['05-01','Festa del Lavoro'],
-                           ['06-02','Festa della Repubblica'],['08-15','Ferragosto'],['11-01','Ognissanti'],
-                           ['12-07','Sant\'Ambrogio (Milano)'],['12-08','Immacolata'],['12-25','Natale'],['12-26','Santo Stefano']];
-            fissi.forEach(([md, nome]) => { f[a + '-' + md] = nome; });
-            const p = pasqua(a);
-            f[dataKey(p)] = 'Pasqua';
-            f[dataKey(new Date(p.getFullYear(), p.getMonth(), p.getDate() + 1))] = 'Lunedì dell\'Angelo';
-            return (cacheFestivi[a] = f);
-        }
-        function festivoDel(d) { return festiviAnno(d.getFullYear())[dataKey(d)] || ''; }
+        let colonneCorrenti = [];
 
         function aggiornaVistaTempo() {
             colonneCorrenti = getColonnaGiorni();
             renderHeader();
             renderTimeline();
-            renderLegenda();
         }
-        function cambiaTempo(dir) { offsetTempo += dir; aggiornaVistaTempo(); }
-        function vaiOggi() { offsetTempo = 0; aggiornaVistaTempo(); }
 
-        /* ---------- Render ---------- */
-        function renderLegenda() {
-            const chip = (bg, fg, border, txt) => `<span class="inline-flex items-center px-2.5 py-1 rounded-lg border" style="background:${bg};color:${fg};border-color:${border}">${txt}</span>`;
-            let html = '<span class="text-slate-400">Stati:</span>' +
-                chip('#f1f5f9', '#334155', '#e2e8f0', '🏦 Ufficio');
-            tuttiGiust().forEach(g => {
-                html += chip(g.colore + '22', g.colore, g.colore + '55', `${esc(g.emoji)} ${esc(g.nome)}`);
-            });
-            html += chip('#fff1f2', '#e11d48', '#fecdd3', '· Festivo');
-            document.getElementById('legenda').innerHTML = html;
+        function cambiaTempo(direzione) {
+            offsetTempo += direzione;
+            aggiornaVistaTempo();
         }
+
+        function vaiOggi() {
+            offsetTempo = 0;
+            aggiornaVistaTempo();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            aggiornaVistaTempo();
+        });
 
         function renderHeader() {
-            const mese = vistaCorrente === 'mese';
-            document.getElementById('tabella-timeline').style.minWidth = mese ? (200 + colonneCorrenti.length * 38 + 190) + 'px' : '800px';
-            const th = colonneCorrenti.map((g, i) => {
-                if (mese) {
-                    const sep = g.lunedi && i > 0 ? ' border-l-2 border-slate-200' : '';
-                    const tint = g.oggi ? ' bg-indigo-50' : (g.festivo ? ' bg-rose-50/70' : '');
-                    return `<th class="px-0.5 py-2 text-center${sep}${tint}" title="${esc(g.festivo || g.label)}">
-                        <div class="text-[9px] font-semibold tracking-wide ${g.festivo ? 'text-rose-400' : 'text-slate-400'}">${g.dow}</div>
-                        <div class="mx-auto mt-0.5 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold ${g.oggi ? 'bg-indigo-600 text-white shadow-sm' : (g.festivo ? 'text-rose-600' : 'text-slate-700')}">${g.num}</div>
-                    </th>`;
-                }
-                const tint = g.oggi ? ' bg-indigo-50 text-indigo-600' : (g.festivo ? ' bg-rose-50/70 text-rose-500' : '');
-                return `<th class="py-4 px-2 text-center text-[11px] whitespace-nowrap${tint}">${g.label}${g.festivo ? `<div class="normal-case font-medium text-[10px]">${esc(g.festivo)}</div>` : ''}</th>`;
-            }).join('');
-            document.getElementById('timeline-header').innerHTML =
-                `<th class="py-4 px-4 ${mese ? 'w-48' : 'w-56'} sticky left-0 z-20 bg-slate-50">Dipendente</th>${th}` +
-                (mese ? '<th class="py-4 px-3 text-left">Riepilogo</th>' : '') +
-                `<th class="py-4 px-3 text-center w-16">Azioni</th>`;
-        }
-
-        function giustificativoDelGiorno(collega, key) {
-            let id = (pianificazione[collega] || {})[key] || '';
-            if (!id && pianoFerie2027.some(f => f.collega === collega && key >= f.dataInizio && key <= f.dataFine)) id = 'Ferie';
-            return id;
+            const headerTr = document.getElementById('timeline-header');
+            let thCols = colonneCorrenti.map(g => `<th class="py-4 px-2 text-center text-[11px] whitespace-nowrap">${g.label}</th>`).join('');
+            headerTr.innerHTML = `
+                <th class="py-4 px-6 w-56">Dipendente</th>
+                ${thCols}
+                <th class="py-4 px-3 text-center w-16">Azioni</th>
+            `;
         }
 
         function renderTimeline() {
             const tbody = document.getElementById('timeline-body');
+            
             if (colleghi.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="10" class="py-12 text-center text-slate-400 italic">Nessun dipendente registrato.</td></tr>`;
                 return;
             }
-            const mese = vistaCorrente === 'mese';
 
-            let righe = colleghi.map((collega, idx) => {
-                const conteggi = {};
-                let uff = 0;
+            tbody.innerHTML = colleghi.map(collega => {
+                if (!pianificazione[collega]) pianificazione[collega] = {};
 
-                const celle = colonneCorrenti.map((g, i) => {
-                    const gi = trovaGiust(giustificativoDelGiorno(collega, g.dataKey));
-                    if (gi) conteggi[gi.id] = (conteggi[gi.id] || 0) + 1;
-                    else if (!g.festivo) uff++;
-
-                    const sep = mese && g.lunedi && i > 0 ? ' border-l-2 border-slate-200' : '';
-                    const tint = g.oggi ? ' bg-indigo-50/70' : (g.festivo ? ' bg-rose-50/50' : '');
-                    let style = '', cls, contenuto, title;
-
-                    if (gi) {
-                        style = `background:${gi.colore}`;
-                        title = gi.nome;
-                        cls = 'text-white font-medium shadow-sm border-transparent hover:brightness-110 hover:scale-105';
-                        contenuto = mese
-                            ? `<span class="text-base leading-none">${esc(gi.emoji)}</span>`
-                            : `<span class="mr-1">${esc(gi.emoji)}</span><span class="truncate">${esc(gi.nome.length > 9 ? gi.nome.slice(0, 8) + '…' : gi.nome)}</span>`;
-                    } else if (g.festivo) {
-                        title = g.festivo;
-                        cls = 'bg-transparent border-dashed border-rose-200 text-rose-300 hover:border-rose-300';
-                        contenuto = mese ? '<span class="text-xs">·</span>' : `<span class="text-[10px] truncate">${esc(g.festivo.length > 12 ? g.festivo.slice(0, 11) + '…' : g.festivo)}</span>`;
-                    } else {
-                        title = 'Ufficio';
-                        cls = 'bg-slate-50 border-slate-200 hover:border-indigo-300 hover:bg-white hover:scale-105';
-                        contenuto = mese ? '<span class="text-base leading-none opacity-70">🏦</span>'
-                                        : '<span class="mr-1">🏦</span><span class="text-slate-500">Ufficio</span>';
+                let celleGiorni = colonneCorrenti.map(g => {
+                    let giust = pianificazione[collega][g.dataKey] || '';
+                    if(!giust) {
+                        // Verifica corretta nell'intervallo esatto del piano ferie
+                        let inFerie = pianoFerie2027.some(f => f.collega === collega && g.dataKey >= f.dataInizio && g.dataKey <= f.dataFine);
+                        if(inFerie) giust = 'Ferie';
                     }
+                    
+                    let styleClass = "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300";
+                    let testo = "Ufficio";
 
-                    const size = mese ? 'w-8 h-8 mx-auto' : 'w-full py-2 px-1';
-                    return `<td class="${mese ? 'py-1.5 px-0.5' : 'py-3 px-1'} text-center${sep}${tint}">
-                        <button onclick="apriModalStato(${idx}, '${g.dataKey}', '${g.label}')" style="${style}" title="${esc(title)}"
-                            class="${size} rounded-lg border text-[11px] transition-all flex items-center justify-center cursor-pointer ${cls}">${contenuto}</button>
-                    </td>`;
+                    if(giust === 'Ferie') { styleClass = "bg-purple-500 text-white font-medium shadow-sm border-transparent"; testo = "Ferie"; }
+                    else if(giust === 'Permesso') { styleClass = "bg-blue-500 text-white font-medium shadow-sm border-transparent"; testo = "Permesso"; }
+                    else if(giust === 'Malattia') { styleClass = "bg-rose-500 text-white font-medium shadow-sm border-transparent"; testo = "Malattia"; }
+                    else if(giust === 'Smart Working') { styleClass = "bg-emerald-500 text-white font-medium shadow-sm border-transparent"; testo = "Smart"; }
+
+                    return `
+                        <td class="py-3 px-1 text-center">
+                            <button onclick="apriModalStato('${collega}', '${g.dataKey}', '${g.label}')" class="w-full py-2 px-1 rounded-xl border text-[11px] transition-all flex items-center justify-center cursor-pointer ${styleClass}" title="${testo}">
+                                <span class="truncate">${testo === 'Ufficio' ? '-' : testo.substring(0, 5)}</span>
+                            </button>
+                        </td>
+                    `;
                 }).join('');
-
-                let riepilogo = '';
-                if (mese) {
-                    const badge = (bg, fg, txt) => `<span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold" style="background:${bg};color:${fg}">${txt}</span>`;
-                    let b = badge('#f1f5f9', '#475569', `🏦 ${uff}`);
-                    tuttiGiust().forEach(g => { if (conteggi[g.id]) b += badge(g.colore + '22', g.colore, `${esc(g.emoji)} ${conteggi[g.id]}`); });
-                    riepilogo = `<td class="py-2 px-3"><div class="flex flex-wrap gap-1">${b}</div></td>`;
-                }
 
                 const iniziali = collega.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                return `<tr class="group hover:bg-slate-50/70 transition-colors">
-                    <td class="${mese ? 'py-2' : 'py-4'} px-4 sticky left-0 z-10 bg-white group-hover:bg-slate-50 shadow-[2px_0_4px_-2px_rgba(15,23,42,0.08)]">
-                        <div class="flex items-center space-x-3">
-                            <div class="${mese ? 'w-8 h-8 rounded-xl' : 'w-10 h-10 rounded-2xl'} bg-indigo-100 text-indigo-700 flex items-center font-bold text-xs justify-center flex-shrink-0 shadow-sm">${esc(iniziali)}</div>
-                            <div class="min-w-0">
-                                <span class="font-bold text-slate-900 block truncate ${mese ? 'text-[13px] max-w-[120px]' : ''}">${esc(collega)}</span>
-                                ${mese ? '' : '<span class="text-[11px] text-slate-400 block font-medium">Team Aziendale</span>'}
+
+                return `
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-4 px-6 flex items-center space-x-3.5">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center font-bold text-xs justify-center flex-shrink-0 shadow-sm">
+                                ${iniziali}
                             </div>
-                        </div>
-                    </td>
-                    ${celle}
-                    ${riepilogo}
-                    <td class="py-2 px-2 text-center">
-                        <button onclick="rimuoviCollega(${idx})" class="text-slate-400 hover:text-rose-600 p-2 transition-colors rounded-xl hover:bg-rose-50" title="Rimuovi collega">
-                            <span class="ico w-4 h-4" data-icon="trash-2"></span>
-                        </button>
-                    </td>
-                </tr>`;
+                            <div>
+                                <span class="font-bold text-slate-900 block truncate">${collega}</span>
+                                <span class="text-[11px] text-slate-400 block font-medium">Team Aziendale</span>
+                            </div>
+                        </td>
+                        ${celleGiorni}
+                        <td class="py-4 px-2 text-center">
+                            <button onclick="rimuoviCollega('${collega}')" class="text-slate-400 hover:text-rose-600 p-2 transition-colors rounded-xl hover:bg-rose-50" title="Rimuovi collega">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
             }).join('');
 
-            if (mese) {
-                const tot = colleghi.length;
-                const celleSede = colonneCorrenti.map((g, i) => {
-                    const sep = g.lunedi && i > 0 ? ' border-l-2 border-slate-200' : '';
-                    if (g.festivo) return `<td class="py-2 text-center text-[11px] text-rose-300${sep}">–</td>`;
-                    const inSede = colleghi.filter(c => !trovaGiust(giustificativoDelGiorno(c, g.dataKey))).length;
-                    const col = inSede === 0 ? 'text-rose-600 bg-rose-50' : (inSede < tot / 2 ? 'text-amber-700 bg-amber-50' : 'text-emerald-700 bg-emerald-50');
-                    return `<td class="py-2 px-0.5 text-center${sep}"><span class="inline-block min-w-[26px] rounded-md px-1 py-0.5 text-[11px] font-bold ${col}" title="${inSede} su ${tot} in sede">${inSede}</span></td>`;
-                }).join('');
-                righe += `<tr class="bg-slate-50/80 border-t-2 border-slate-200">
-                    <td class="py-2.5 px-4 sticky left-0 z-10 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">🏦 In sede</td>
-                    ${celleSede}<td></td><td></td></tr>`;
-            }
-
-            tbody.innerHTML = righe;
-            idratIcone(tbody);
+            lucide.createIcons();
         }
 
-        /* ---------- Modal stato giorno ---------- */
-        function apriModalStato(idx, key, labelGiorno) {
-            cellaAttiva = { collega: colleghi[idx], dataKey: key };
-            document.getElementById('modal-title').innerText = `Stato per ${colleghi[idx]}`;
+        function apriModalStato(collega, dataKey, labelGiorno) {
+            cellaAttiva = { collega, dataKey };
+            document.getElementById('modal-title').innerText = `Stato per ${collega}`;
             document.getElementById('modal-subtitle').innerText = `Modifica per il giorno: ${labelGiorno}`;
-            let html = `<button onclick="selezionaStatoDaModal('')" class="flex items-center space-x-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm transition-all text-left">
-                <span class="w-3 h-3 rounded-full bg-slate-300"></span><span>🏦 In Ufficio (Standard)</span></button>`;
-            tuttiGiust().forEach(g => {
-                html += `<button onclick="selezionaStatoDaModal('${g.id}')" class="flex items-center space-x-3 p-3 rounded-2xl border font-medium text-sm transition-all text-left hover:brightness-95"
-                    style="background:${g.colore}1a;border-color:${g.colore}55;color:${g.colore}">
-                    <span class="w-3 h-3 rounded-full" style="background:${g.colore}"></span><span>${esc(g.emoji)} ${esc(g.nome)}</span></button>`;
-            });
-            document.getElementById('modal-opzioni').innerHTML = html;
             document.getElementById('modal-stato').classList.remove('hidden');
         }
-        function chiudiModalStato() { document.getElementById('modal-stato').classList.add('hidden'); }
+
+        function chiudiModalStato() {
+            document.getElementById('modal-stato').classList.add('hidden');
+        }
+
         function selezionaStatoDaModal(valore) {
             if (!pianificazione[cellaAttiva.collega]) pianificazione[cellaAttiva.collega] = {};
-            if (valore === '') {
-                pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = '';
-                delete pianificazione[cellaAttiva.collega][cellaAttiva.dataKey];
-            } else {
-                pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = valore;
-            }
-            salvaTutto();
+            pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = valore;
             chiudiModalStato();
             renderTimeline();
         }
 
-        /* ---------- Gestione giustificativi ---------- */
-        function renderColoriGiust() {
-            document.getElementById('giust-colori').innerHTML = PALETTE.map(c =>
-                `<button type="button" class="swatch ${c === coloreScelto ? 'sel' : ''}" style="background:${c}" onclick="scegliColore('${c}')" aria-label="Colore ${c}"></button>`).join('');
-        }
-        function scegliColore(c) { coloreScelto = c; renderColoriGiust(); }
-
-        function renderListaGiust() {
-            document.getElementById('lista-giust').innerHTML = tuttiGiust().map(g => `
-                <div class="flex items-center justify-between p-2.5 rounded-2xl border" style="background:${g.colore}12;border-color:${g.colore}40">
-                    <div class="flex items-center space-x-3">
-                        <span class="w-7 h-7 rounded-xl flex items-center justify-center text-sm" style="background:${g.colore}">${esc(g.emoji)}</span>
-                        <span class="text-sm font-semibold text-slate-800">${esc(g.nome)}</span>
-                        ${g.fisso ? '<span class="text-[10px] uppercase tracking-wider text-slate-400">predefinito</span>' : ''}
-                    </div>
-                    ${g.fisso ? '' : `<button onclick="rimuoviGiustificativo('${g.id}')" class="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50" title="Elimina"><span class="ico w-4 h-4" data-icon="trash-2"></span></button>`}
-                </div>`).join('');
-            idratIcone(document.getElementById('lista-giust'));
-        }
-
-        function apriModalGiustificativi() {
-            renderListaGiust();
-            renderColoriGiust();
-            document.getElementById('modal-giust').classList.remove('hidden');
-        }
-        function chiudiModalGiustificativi() { document.getElementById('modal-giust').classList.add('hidden'); }
-
-        function aggiungiGiustificativo() {
-            const nome = document.getElementById('giust-nome').value.trim();
-            const emoji = document.getElementById('giust-emoji').value.trim() || '📌';
-            if (!nome) { alert('Inserisci il nome del giustificativo.'); return; }
-            if (tuttiGiust().some(g => g.nome.toLowerCase() === nome.toLowerCase())) { alert('Esiste già un giustificativo con questo nome.'); return; }
-            giustCustom.push({ id: 'g_' + Date.now(), nome, emoji, colore: coloreScelto, fisso: false });
-            document.getElementById('giust-nome').value = '';
-            document.getElementById('giust-emoji').value = '';
-            salvaTutto();
-            renderListaGiust();
-            renderLegenda();
-            renderTimeline();
-        }
-
-        function rimuoviGiustificativo(id) {
-            const g = trovaGiust(id);
-            if (!g || g.fisso) return;
-            const usi = Object.values(pianificazione).reduce((n, mappa) => n + Object.values(mappa).filter(v => v === id).length, 0);
-            const msg = usi > 0
-                ? `"${g.nome}" è usato in ${usi} giorni: verranno riportati a "In Ufficio". Eliminare?`
-                : `Eliminare "${g.nome}"?`;
-            if (!confirm(msg)) return;
-            giustCustom = giustCustom.filter(x => x.id !== id);
-            Object.values(pianificazione).forEach(mappa => {
-                Object.keys(mappa).forEach(k => { if (mappa[k] === id) delete mappa[k]; });
-            });
-            salvaTutto();
-            renderListaGiust();
-            renderLegenda();
-            renderTimeline();
-        }
-
-        /* ---------- Piano ferie 2027 ---------- */
+        // Gestione Piano Ferie 2027
         function aggiornaSelectFerieColleghi() {
-            document.getElementById('ferie-collega-select').innerHTML = colleghi.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+            const sel = document.getElementById('ferie-collega-select');
+            sel.innerHTML = colleghi.map(c => `<option value="${c}">${c}</option>`).join('');
         }
 
         function aggiungiPeriodoFerie2027() {
             const collega = document.getElementById('ferie-collega-select').value;
             const dataInizio = document.getElementById('ferie-data-inizio').value;
             const dataFine = document.getElementById('ferie-data-fine').value;
-            if (!dataInizio || !dataFine) { alert('Seleziona sia la data di inizio che quella di fine.'); return; }
-            if (dataInizio > dataFine) { alert('La data di inizio non può essere successiva alla data di fine.'); return; }
+
+            if(!dataInizio || !dataFine) {
+                alert('Seleziona sia la data di inizio che quella di fine.');
+                return;
+            }
+            if(dataInizio > dataFine) {
+                alert('La data di inizio non può essere successiva alla data di fine.');
+                return;
+            }
+
             pianoFerie2027.push({ id: Date.now(), collega, dataInizio, dataFine });
             salvaTutto();
             renderTabellaFerie2027();
             renderTimeline();
+            alert('Periodo di ferie 2027 aggiunto con successo!');
         }
 
         function rimuoviPeriodoFerie2027(id) {
@@ -669,48 +487,39 @@
 
         function renderTabellaFerie2027() {
             const tbody = document.getElementById('tabella-ferie2027-body');
-            if (pianoFerie2027.length === 0) {
+            if(pianoFerie2027.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400 italic">Nessun periodo di ferie registrato per il 2027.</td></tr>`;
                 return;
             }
-            const ordinate = [...pianoFerie2027].sort((a, b) => a.dataInizio.localeCompare(b.dataInizio));
-            tbody.innerHTML = ordinate.map(f => `
+
+            tbody.innerHTML = pianoFerie2027.map(f => `
                 <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="py-3 px-4 font-semibold text-slate-800">${esc(f.collega)}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">${f.collega}</td>
                     <td class="py-3 px-4 text-slate-600">${formattaDataItaliana(f.dataInizio)}</td>
                     <td class="py-3 px-4 text-slate-600">${formattaDataItaliana(f.dataFine)}</td>
                     <td class="py-3 px-4 text-right">
                         <button onclick="rimuoviPeriodoFerie2027(${f.id})" class="text-slate-400 hover:text-rose-600 p-1.5 transition-colors rounded-lg hover:bg-rose-50" title="Elimina">
-                            <span class="ico w-4 h-4" data-icon="trash-2"></span>
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </td>
-                </tr>`).join('');
-            idratIcone(tbody);
+                </tr>
+            `).join('');
+            lucide.createIcons();
         }
 
-        /* ---------- Persistenza ---------- */
-        function salvaLocale() {
-            try {
-                localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
-                localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
-                localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
-                localStorage.setItem('team_giustificativi', JSON.stringify(giustCustom));
-                return true;
-            } catch (e) { return false; }
-        }
-
-        function salvaTutto(conAvviso) {
-            const ok = salvaLocale();
-            programmaSalvataggioRemoto();
-            if (!ok) alert('Impossibile salvare in locale: il browser ha bloccato lo storage.');
-            else if (conAvviso) alert(utenteCorrente ? 'Dati salvati e sincronizzati.' : 'Dati salvati con successo!');
+        function salvaTutto() {
+            localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
+            localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
+            localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
+            alert('Dati salvati con successo!');
         }
 
         function aggiungiCollega() {
             const input = document.getElementById('nuovo-collega-nome');
             const nome = input.value.trim();
-            if (!nome) return;
-            if (colleghi.includes(nome)) { alert('Collega già presente'); return; }
+            if(!nome) return;
+            if(colleghi.includes(nome)) { alert('Collega già presente'); return; }
+
             colleghi.push(nome);
             input.value = '';
             salvaTutto();
@@ -718,11 +527,10 @@
             aggiornaSelectFerieColleghi();
         }
 
-        function rimuoviCollega(idx) {
-            const nome = colleghi[idx];
-            if (colleghi.length <= 1) { alert("Impossibile rimuovere l'unico dipendente rimasto"); return; }
-            if (confirm(`Vuoi rimuovere ${nome}?`)) {
-                colleghi.splice(idx, 1);
+        function rimuoviCollega(nome) {
+            if(colleghi.length <= 1) { alert('Impossibile rimuovere l\'unico dipendente rimasto'); return; }
+            if(confirm(`Vuoi rimuovere ${nome}?`)) {
+                colleghi = colleghi.filter(c => c !== nome);
                 delete pianificazione[nome];
                 pianoFerie2027 = pianoFerie2027.filter(f => f.collega !== nome);
                 salvaTutto();
@@ -731,186 +539,18 @@
             }
         }
 
-        /* ---------- Impostazioni, backup, Firebase ---------- */
-        function apriConfigModal() { document.getElementById('config-modal').classList.remove('hidden'); }
+        // Config Firebase
+        function apriConfigModal() { document.getElementById('config-modal').classList.add('hidden'); document.getElementById('config-modal').classList.remove('hidden'); }
         function chiudiConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
-
         function salvaConfigFirebase() {
-            const raw = document.getElementById('firebase-config-input').value.trim();
+            const val = document.getElementById('firebase-config-input').value.trim();
             try {
-                const i = raw.indexOf('{'), j = raw.lastIndexOf('}');
-                if (i < 0 || j < i) throw new Error('no-object');
-                const t = raw.slice(i, j + 1)
-                    .replace(/^\s*\/\/.*$/gm, '')
-                    .replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":')
-                    .replace(/,\s*}/g, '}');
-                const cfg = JSON.parse(t);
-                if (!cfg.apiKey || !cfg.projectId) throw new Error('missing');
+                const cfg = JSON.parse(val);
                 localStorage.setItem('firebase_config_json', JSON.stringify(cfg));
-                location.reload();
-            } catch (e) { alert('Configurazione non riconosciuta.'); }
+                chiudiConfigModal();
+                alert('Configurazione salvata!');
+            } catch(e) { alert('JSON non valido'); }
         }
-
-        function esportaDati() {
-            const dati = { colleghi, pianificazione, pianoFerie2027, giustificativi: giustCustom };
-            const blob = new Blob([JSON.stringify(dati, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'presenze-team-' + dataKey(new Date()) + '.json';
-            a.click();
-            URL.revokeObjectURL(a.href);
-        }
-
-        function importaDati(ev) {
-            const file = ev.target.files[0];
-            if (!file) return;
-            const r = new FileReader();
-            r.onload = () => {
-                try {
-                    const d = JSON.parse(r.result);
-                    if (!Array.isArray(d.colleghi)) throw new Error('formato');
-                    if (!confirm('Importando sostituirai i dati attuali di questo browser. Continuare?')) return;
-                    colleghi = d.colleghi;
-                    pianificazione = d.pianificazione || {};
-                    pianoFerie2027 = d.pianoFerie2027 || [];
-                    giustCustom = d.giustificativi || [];
-                    salvaTutto();
-                    aggiornaVistaTempo();
-                    aggiornaSelectFerieColleghi();
-                    renderTabellaFerie2027();
-                    chiudiConfigModal();
-                } catch (e) { alert('File non valido.'); }
-            };
-            r.readAsText(file);
-            ev.target.value = '';
-        }
-
-        /* ---------- Firebase (Auth + Firestore) ---------- */
-        let db = null, auth = null, utenteCorrente = null, unsubRemoto = null, timerRemoto = null, statoSync = 'locale', ultimoErrore = '';
-
-        function configFirebase() { return FIREBASE_CONFIG || leggi('firebase_config_json', null); }
-
-        function statoBadge(stato) {
-            statoSync = stato;
-            const map = {
-                locale: ['bg-amber-50 text-amber-700 border-amber-200', 'bg-amber-500', 'Locale'],
-                login:  ['bg-sky-50 text-sky-700 border-sky-200', 'bg-sky-500', 'Accedi'],
-                online: ['bg-emerald-50 text-emerald-700 border-emerald-200', 'bg-emerald-500', 'Sincronizzato'],
-                errore: ['bg-rose-50 text-rose-700 border-rose-200', 'bg-rose-500', 'Errore sync']
-            };
-            const [c, dot, txt] = map[stato];
-            const el = document.getElementById('firebase-status');
-            el.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ' + c;
-            el.innerHTML = '<span class="w-2 h-2 mr-1.5 ' + dot + ' rounded-full"></span>' + txt;
-            el.title = stato === 'errore' ? ultimoErrore : '';
-        }
-
-        function erroreFirestore(e) {
-            console.error(e);
-            ultimoErrore = 'Errore Firestore: ' + (e && (e.code || e.message));
-            statoBadge('errore');
-        }
-
-        function clickBadge() {
-            if (statoSync === 'errore' && ultimoErrore) { alert(ultimoErrore); return; }
-            if (!auth) { apriConfigModal(); return; }
-            if (utenteCorrente) {
-                if (confirm('Vuoi bloccare l\'app su questo dispositivo? Servirà di nuovo la password.')) {
-                    auth.signOut().then(() => {
-                        ['team_colleghi', 'team_pianificazione', 'team_ferie_2027', 'team_giustificativi'].forEach(k => localStorage.removeItem(k));
-                        location.reload();
-                    });
-                }
-            } else apriLogin();
-        }
-
-        function apriLogin() {
-            document.getElementById('modal-login').classList.remove('hidden');
-            setTimeout(() => document.getElementById('login-password').focus(), 50);
-        }
-        function chiudiLogin() { document.getElementById('modal-login').classList.add('hidden'); }
-
-        function accedi() {
-            const pw = document.getElementById('login-password').value;
-            const err = document.getElementById('login-errore');
-            err.innerText = '';
-            if (!pw) { err.innerText = 'Inserisci la password.'; return; }
-            auth.signInWithEmailAndPassword(EMAIL_TEAM, pw).then(() => {
-                document.getElementById('login-password').value = '';
-            }).catch(e => {
-                err.innerText = 'Password errata o utente non configurato.';
-            });
-        }
-
-        function avviaFirebase() {
-            const cfg = configFirebase();
-            if (!cfg || typeof firebase === 'undefined') { statoBadge('locale'); return; }
-            try {
-                if (!firebase.apps.length) firebase.initializeApp(cfg);
-                auth = firebase.auth();
-                auth.setPersistence(RICORDA_ACCESSO ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION).catch(() => {});
-                db = firebase.firestore();
-                statoBadge('login');
-                auth.onAuthStateChanged(u => {
-                    utenteCorrente = u;
-                    if (u) { chiudiLogin(); ascoltaRemoto(); }
-                    else {
-                        if (unsubRemoto) { unsubRemoto(); unsubRemoto = null; }
-                        statoBadge('login');
-                        apriLogin();
-                    }
-                });
-            } catch (e) { console.error(e); statoBadge('errore'); }
-        }
-
-        function datiCorrenti() {
-            return JSON.stringify({ colleghi, pianificazione, pianoFerie2027, giustificativi: giustCustom });
-        }
-
-        function ascoltaRemoto() {
-            if (unsubRemoto) unsubRemoto();
-            const ref = db.collection('presenze').doc('team');
-            unsubRemoto = ref.onSnapshot(snap => {
-                if (snap.metadata.hasPendingWrites) return;
-                if (!snap.exists) { salvaRemoto(); return; }
-                try {
-                    const d = JSON.parse(snap.data().dati);
-                    colleghi = d.colleghi || [];
-                    pianificazione = d.pianificazione || {};
-                    pianoFerie2027 = d.pianoFerie2027 || [];
-                    giustCustom = d.giustificativi || [];
-                    const migrato = migraMalattia(pianificazione);
-                    salvaLocale();
-                    if (migrato) programmaSalvataggioRemoto();
-                    aggiornaVistaTempo();
-                    aggiornaSelectFerieColleghi();
-                    renderTabellaFerie2027();
-                    statoBadge('online');
-                } catch (e) { console.error(e); statoBadge('errore'); }
-            }, erroreFirestore);
-        }
-
-        function programmaSalvataggioRemoto() {
-            if (!db || !utenteCorrente) return;
-            clearTimeout(timerRemoto);
-            timerRemoto = setTimeout(salvaRemoto, 400);
-        }
-
-        function salvaRemoto() {
-            if (!db || !utenteCorrente) return;
-            db.collection('presenze').doc('team').set({
-                dati: datiCorrenti(),
-                aggiornatoDa: utenteCorrente.email || '',
-                aggiornato: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => statoBadge('online')).catch(erroreFirestore);
-        }
-
-        /* ---------- Avvio ---------- */
-        window.addEventListener('DOMContentLoaded', () => {
-            idratIcone();
-            aggiornaVistaTempo();
-            avviaFirebase();
-        });
     </script>
 </body>
 </html>
