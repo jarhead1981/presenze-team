@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<!-- Firebase SDK scripts -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PresenzeTeam - Timeline, Mese & Piano Ferie</title>
@@ -12,6 +9,9 @@
     <!-- Font Inter & Icone Lucide -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK Compat v10 -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7fc; }
         .timeline-scroll { -webkit-overflow-scrolling: touch; }
@@ -205,7 +205,7 @@
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900">Impostazioni Applicazione</h3>
-                    <p class="text-xs text-slate-500">Gestisci i giustificativi con icone e la sincronizzazione.</p>
+                    <p class="text-xs text-slate-500">Gestisci i giustificativi con icone e la sincronizzazione Firebase.</p>
                 </div>
                 <button onclick="chiudiConfigModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
@@ -284,7 +284,6 @@
         let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || {};
         let pianoFerie2027 = JSON.parse(localStorage.getItem('team_ferie_2027')) || [];
 
-        // Giustificativi aggiornati senza Malattia
         let giustificativi = JSON.parse(localStorage.getItem('team_giustificativi')) || [
             { id: 'Ferie', label: 'Ferie', icon: 'sun', color: 'purple' },
             { id: 'Permesso', label: 'Permesso', icon: 'clock', color: 'blue' },
@@ -293,9 +292,32 @@
 
         let ufficioConfig = JSON.parse(localStorage.getItem('team_ufficio_config')) || { label: 'Ufficio / Banca', icon: 'landmark', color: 'indigo' };
 
+        let db = null;
+        let usaFirebase = false;
         let cellaAttiva = { collega: '', dataKey: '' };
-        let vistaCorrente = 'settimana'; // 'settimana' o 'mese'
-        let offsetTempo = 0; // Offset settimane o mesi
+        let vistaCorrente = 'settimana';
+        let offsetTempo = 0;
+
+        // Inizializzazione Firebase da localStorage
+        function initFirebase() {
+            const configStr = localStorage.getItem('firebase_config_json');
+            if (configStr) {
+                try {
+                    const firebaseConfig = JSON.parse(configStr);
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    db = firebase.firestore();
+                    usaFirebase = true;
+                    document.getElementById('firebase-status').innerHTML = '<span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Firebase Sincronizzato';
+                    document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
+                    
+                    caricaDaFirebase();
+                } catch (e) {
+                    console.error("Errore inizializzazione Firebase:", e);
+                }
+            }
+        }
 
         function getColorClasses(color) {
             switch(color) {
@@ -420,6 +442,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
             aggiornaVistaTempo();
             renderLegenda();
         });
@@ -565,6 +588,7 @@
             pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = valore;
             chiudiModalStato();
             renderTimeline();
+            salvaTutto(false);
         }
 
         // Gestione Piano Ferie 2027
@@ -623,14 +647,57 @@
             lucide.createIcons();
         }
 
-        function salvaTutto(mostraAlert = true) {
+        // Funzione unificata di salvataggio (Locale + Firebase)
+        async function salvaTutto(mostraAlert = true) {
             localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
             localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
             localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
             localStorage.setItem('team_giustificativi', JSON.stringify(giustificativi));
             localStorage.setItem('team_ufficio_config', JSON.stringify(ufficioConfig));
+
+            if (usaFirebase && db) {
+                try {
+                    await db.collection('presenzeTeam').doc('datiGlobali').set({
+                        colleghi,
+                        pianificazione,
+                        pianoFerie2027,
+                        giustificativi,
+                        ufficioConfig,
+                        aggiornatoIl: new Date().toISOString()
+                    });
+                    if(mostraAlert) alert('Dati salvati e sincronizzati su Firebase con successo!');
+                    return;
+                } catch (error) {
+                    console.error("Errore salvataggio su Firestore: ", error);
+                    if(mostraAlert) alert('Errore di sincronizzazione cloud. Dati salvati in locale.');
+                    return;
+                }
+            }
+
             if(mostraAlert) {
                 alert('Dati salvati con successo!');
+            }
+        }
+
+        // Caricamento dati da Firestore
+        async function caricaDaFirebase() {
+            if (!usaFirebase || !db) return;
+            try {
+                const docRef = await db.collection('presenzeTeam').doc('datiGlobali').get();
+                if (docRef.exists) {
+                    const data = docRef.data();
+                    if (data.colleghi) colleghi = data.colleghi;
+                    if (data.pianificazione) pianificazione = data.pianificazione;
+                    if (data.pianoFerie2027) pianoFerie2027 = data.pianoFerie2027;
+                    if (data.giustificativi) giustificativi = data.giustificativi;
+                    if (data.ufficioConfig) ufficioConfig = data.ufficioConfig;
+
+                    aggiornaVistaTempo();
+                    renderLegenda();
+                    renderTabellaFerie2027();
+                }
+            } catch (error) {
+                console.error("Errore caricamento da Firestore: ", error);
             }
         }
 
@@ -662,9 +729,14 @@
         // Gestione Impostazioni & Giustificativi
         function apriConfigModal() { 
             renderGiustificativiConfigList();
+            const cfgSaved = localStorage.getItem('firebase_config_json');
+            if (cfgSaved) {
+                document.getElementById('firebase-config-input').value = cfgSaved;
+            }
             document.getElementById('config-modal').classList.remove('hidden'); 
             lucide.createIcons();
         }
+
         function chiudiConfigModal() { 
             document.getElementById('config-modal').classList.add('hidden'); 
         }
@@ -717,10 +789,13 @@
                     const cfg = JSON.parse(valFirebase);
                     localStorage.setItem('firebase_config_json', JSON.stringify(cfg));
                 } catch(e) { alert('JSON Firebase non valido'); return; }
+            } else {
+                localStorage.removeItem('firebase_config_json');
             }
 
             salvaTutto(false);
             chiudiConfigModal();
+            initFirebase();
             renderTimeline();
             renderLegenda();
             alert('Impostazioni salvate con successo!');
