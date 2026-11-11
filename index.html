@@ -20,7 +20,7 @@
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-md">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-2xl shadow-md flex items-center justify-center">
                     <i data-lucide="clock" class="w-5 h-5"></i>
                 </div>
                 <div>
@@ -30,10 +30,10 @@
             </div>
             
             <div class="flex items-center space-x-2">
-                <span id="firebase-status" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full"></span> Locale
+                <span id="firebase-status" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale
                 </span>
-                <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl text-sm transition-colors" title="Configura Firebase">
+                <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl text-sm transition-colors" title="Configura Firebase">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -43,37 +43,47 @@
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        <!-- Header Sezione stile Dashboard -->
-        <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Header Dashboard -->
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <div class="flex items-center space-x-2 text-indigo-600 font-semibold text-xs uppercase tracking-wider mb-1">
                     <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                     <span>Vista Timeline Settimanale</span>
                 </div>
-                <h2 class="text-xl font-bold text-slate-900">Gestione Presenze e Assenze</h2>
+                <h2 class="text-2xl font-bold text-slate-900">Pianificazione Team</h2>
             </div>
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div class="flex items-center space-x-2">
-                    <input type="text" id="nuovo-collega-nome" placeholder="Nome nuovo collega..." class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm flex-grow focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
+                    <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="bg-transparent px-3 py-1.5 text-sm focus:outline-none w-40 sm:w-48">
                     <button onclick="aggiungiCollega()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 whitespace-nowrap">
                         <i data-lucide="user-plus" class="w-4 h-4"></i>
                         <span>Aggiungi</span>
                     </button>
                 </div>
-                <button onclick="salvaTutto()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
+                <button onclick="salvaTutto()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
                     <i data-lucide="save" class="w-4 h-4"></i>
                     <span>Salva</span>
                 </button>
             </div>
         </div>
 
-        <!-- Timeline / Tabella Principale stile Bizneo -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- Legenda Stati -->
+        <div class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600">
+            <span class="text-slate-400">Stati:</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">🏢 Ufficio</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 border border-purple-200">🏖️ Ferie</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-100 text-blue-700 border border-blue-200">⏱️ Permesso</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200">🏥 Malattia</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">💻 Smart Working</span>
+        </div>
+
+        <!-- Timeline / Tabella Principale in stile Dashboard moderna -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="timeline-scroll overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[780px]">
+                <table class="w-full text-left border-collapse min-w-[800px]">
                     <thead>
-                        <tr id="timeline-header" class="bg-slate-50/90 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                            <!-- Generato dinamicamente con le date della settimana -->
+                        <tr id="timeline-header" class="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            <!-- Generato dinamicamente con le date -->
                         </tr>
                     </thead>
                     <tbody id="timeline-body" class="divide-y divide-slate-100 text-sm">
@@ -85,15 +95,49 @@
 
     </main>
 
+    <!-- Modal Cambio Stato Rapido (stile popup pulito) -->
+    <div id="modal-stato" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 id="modal-title" class="text-base font-bold text-slate-900">Modifica Stato</h3>
+                <button onclick="chiudiModalStato()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p id="modal-subtitle" class="text-xs text-slate-500">Seleziona lo stato per questo giorno:</p>
+            
+            <div class="grid grid-cols-1 gap-2.5 pt-2">
+                <button onclick="selezionaStatoDaModal('')" class="flex items-center space-x-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                    <span>🏢 In Ufficio (Standard)</span>
+                </button>
+                <button onclick="selezionaStatoDaModal('Ferie')" class="flex items-center space-x-3 p-3 rounded-2xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+                    <span>🏖️ Ferie</span>
+                </button>
+                <button onclick="selezionaStatoDaModal('Permesso')" class="flex items-center space-x-3 p-3 rounded-2xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span>⏱️ Permesso</span>
+                </button>
+                <button onclick="selezionaStatoDaModal('Malattia')" class="flex items-center space-x-3 p-3 rounded-2xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                    <span>🏥 Malattia</span>
+                </button>
+                <button onclick="selezionaStatoDaModal('Smart Working')" class="flex items-center space-x-3 p-3 rounded-2xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-sm transition-all text-left">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                    <span>💻 Smart Working</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Configurazione Firebase -->
-    <div id="config-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+    <div id="config-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <h3 class="text-lg font-bold text-slate-900">Configurazione Firebase (Opzionale)</h3>
             <p class="text-xs text-slate-500">Incolla qui la configurazione JSON di Firebase per sincronizzare in tempo reale.</p>
-            <textarea id="firebase-config-input" rows="6" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none" placeholder='{ apiKey: "...", projectId: "..." }'></textarea>
-            <div class="flex justify-end space-x-3">
-                <button onclick="chiudiConfigModal()" class="px-4 py-2 text-sm text-slate-600">Annulla</button>
-                <button onclick="salvaConfigFirebase()" class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl">Salva</button>
+            <textarea id="firebase-config-input" rows="6" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='{ apiKey: "...", projectId: "..." }'></textarea>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="chiudiConfigModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Annulla</button>
+                <button onclick="salvaConfigFirebase()" class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl">Salva</button>
             </div>
         </div>
     </div>
@@ -105,12 +149,12 @@
         let colleghi = JSON.parse(localStorage.getItem('team_colleghi')) || ['Marco Lotti', 'Luana Andreoni', 'Maria Rossi'];
         let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || {};
 
-        // Calcola i giorni della settimana corrente (Lun-Ven) con le date reali
+        let cellaAttiva = { collega: '', giorno: '' };
+
         function getGiorniLavorativiCorrenti() {
             let curr = new Date();
-            let first = curr.getDate() - curr.getDay() + 1; // Lunedì
+            let first = curr.getDate() - curr.getDay() + 1;
             let giorni = [];
-            
             let nomiGiorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
             
             for (let i = 0; i < 5; i++) {
@@ -133,7 +177,7 @@
             const headerTr = document.getElementById('timeline-header');
             let thCols = giorniLavorativi.map(g => `<th class="py-4 px-3 text-center">${g.label}</th>`).join('');
             headerTr.innerHTML = `
-                <th class="py-4 px-5 w-52">Dipendente</th>
+                <th class="py-4 px-6 w-56">Dipendente</th>
                 ${thCols}
                 <th class="py-4 px-3 text-center w-16">Azioni</th>
             `;
@@ -143,37 +187,30 @@
             const tbody = document.getElementById('timeline-body');
             
             if (colleghi.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-slate-400 italic">Nessun dipendente registrato.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400 italic">Nessun dipendente registrato.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = colleghi.map(collega => {
-                if (!pianificazione[collega]) {
-                    pianificazione[collega] = {};
-                }
+                if (!pianificazione[collega]) pianificazione[collega] = {};
 
                 let celleGiorni = giorniLavorativi.map(g => {
                     let giust = pianificazione[collega][g.nome] || '';
                     
-                    // Stili badge colorati in stile Bizneo
-                    let badgeClass = "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100";
-                    let icona = "🏢";
+                    // Stile blocco pieno tipo Bizneo
+                    let styleClass = "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300";
                     let testo = "Ufficio";
 
-                    if(giust === 'Ferie') { badgeClass = "bg-purple-100 text-purple-800 border-purple-300 font-semibold shadow-sm"; icona = "🏖️"; testo = "Ferie"; }
-                    else if(giust === 'Permesso') { badgeClass = "bg-blue-100 text-blue-800 border-blue-300 font-semibold shadow-sm"; icona = "⏱️"; testo = "Permesso"; }
-                    else if(giust === 'Malattia') { badgeClass = "bg-rose-100 text-rose-800 border-rose-300 font-semibold shadow-sm"; icona = "🏥"; testo = "Malattia"; }
-                    else if(giust === 'Smart Working') { badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold shadow-sm"; icona = "💻"; testo = "Smart"; }
+                    if(giust === 'Ferie') { styleClass = "bg-purple-500 text-white font-medium shadow-sm border-transparent"; testo = "Ferie"; }
+                    else if(giust === 'Permesso') { styleClass = "bg-blue-500 text-white font-medium shadow-sm border-transparent"; testo = "Permesso"; }
+                    else if(giust === 'Malattia') { styleClass = "bg-rose-500 text-white font-medium shadow-sm border-transparent"; testo = "Malattia"; }
+                    else if(giust === 'Smart Working') { styleClass = "bg-emerald-500 text-white font-medium shadow-sm border-transparent"; testo = "Smart"; }
 
                     return `
-                        <td class="py-3 px-2 text-center">
-                            <select onchange="cambiaStato('${collega}', '${g.nome}', this.value)" class="w-full text-xs border rounded-xl py-2 px-1 text-center font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all cursor-pointer ${badgeClass}">
-                                <option value="" ${!giust ? 'selected' : ''}>🏢 Ufficio</option>
-                                <option value="Ferie" ${giust === 'Ferie' ? 'selected' : ''}>🏖️ Ferie</option>
-                                <option value="Permesso" ${giust === 'Permesso' ? 'selected' : ''}>⏱️ Permesso</option>
-                                <option value="Malattia" ${giust === 'Malattia' ? 'selected' : ''}>🏥 Malattia</option>
-                                <option value="Smart Working" ${giust === 'Smart Working' ? 'selected' : ''}>💻 Smart Working</option>
-                            </select>
+                        <td class="py-3.5 px-2 text-center">
+                            <button onclick="apriModalStato('${collega}', '${g.nome}')" class="w-full py-2.5 px-2 rounded-2xl border text-xs transition-all flex items-center justify-center space-x-1 cursor-pointer ${styleClass}">
+                                <span class="truncate">${testo}</span>
+                            </button>
                         </td>
                     `;
                 }).join('');
@@ -182,18 +219,18 @@
 
                 return `
                     <tr class="hover:bg-slate-50/70 transition-colors">
-                        <td class="py-3.5 px-5 flex items-center space-x-3">
-                            <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center font-bold text-xs justify-center flex-shrink-0 shadow-inner">
+                        <td class="py-4 px-6 flex items-center space-x-3.5">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center font-bold text-xs justify-center flex-shrink-0 shadow-sm">
                                 ${iniziali}
                             </div>
                             <div>
-                                <span class="font-semibold text-slate-900 block truncate">${collega}</span>
-                                <span class="text-[11px] text-slate-400 block">Team</span>
+                                <span class="font-bold text-slate-900 block truncate">${collega}</span>
+                                <span class="text-[11px] text-slate-400 block font-medium">Team Aziendale</span>
                             </div>
                         </td>
                         ${celleGiorni}
-                        <td class="py-3.5 px-2 text-center">
-                            <button onclick="rimuoviCollega('${collega}')" class="text-slate-400 hover:text-rose-600 p-1.5 transition-colors rounded-lg hover:bg-rose-50" title="Rimuovi collega">
+                        <td class="py-4 px-2 text-center">
+                            <button onclick="rimuoviCollega('${collega}')" class="text-slate-400 hover:text-rose-600 p-2 transition-colors rounded-xl hover:bg-rose-50" title="Rimuovi collega">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
@@ -204,9 +241,21 @@
             lucide.createIcons();
         }
 
-        function cambiaStato(collega, giorno, valore) {
-            if(!pianificazione[collega]) pianificazione[collega] = {};
-            pianificazione[collega][giorno] = valore;
+        function apriModalStato(collega, giorno) {
+            cellaAttiva = { collega, giorno };
+            document.getElementById('modal-title').innerText = `Stato per ${collega}`;
+            document.getElementById('modal-subtitle').innerText = `Modifica per il giorno: ${giorno}`;
+            document.getElementById('modal-stato').classList.remove('hidden');
+        }
+
+        function chiudiModalStato() {
+            document.getElementById('modal-stato').classList.add('hidden');
+        }
+
+        function selezionaStatoDaModal(valore) {
+            if (!pianificazione[cellaAttiva.collega]) pianificazione[cellaAttiva.collega] = {};
+            pianificazione[cellaAttiva.collega][cellaAttiva.giorno] = valore;
+            chiudiModalStato();
             renderTimeline();
         }
 
