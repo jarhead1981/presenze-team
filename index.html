@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PresenzeTeam - Timeline & Piano Ferie 2027</title>
+    <title>PresenzeTeam - Timeline, Mese & Piano Ferie</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Inter & Icone Lucide -->
@@ -25,13 +25,13 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-base sm:text-lg text-slate-900 leading-tight">PresenzeTeam</h1>
-                    <p class="text-[11px] text-slate-500">Timeline & Piano Ferie 2027</p>
+                    <p class="text-[11px] text-slate-500">Timeline & Piano Ferie</p>
                 </div>
             </div>
             
-            <!-- Tab di Navigazione Rapida -->
+            <!-- Tab di Navigazione Principale -->
             <div class="hidden sm:flex items-center space-x-1 bg-slate-100 p-1 rounded-2xl">
-                <button onclick="mostraTab('timeline')" id="btn-tab-timeline" class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all bg-white text-indigo-600 shadow-sm">Timeline Settimanale</button>
+                <button onclick="mostraTab('timeline')" id="btn-tab-timeline" class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all bg-white text-indigo-600 shadow-sm">Timeline Presenze</button>
                 <button onclick="mostraTab('ferie2027')" id="btn-tab-ferie2027" class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-slate-900">🏖️ Piano Ferie 2027</button>
             </div>
 
@@ -48,24 +48,31 @@
 
     <!-- Menu mobile per cambio tab -->
     <div class="sm:hidden bg-white border-b border-slate-200 px-4 py-2 flex justify-around text-xs font-semibold">
-        <button onclick="mostraTab('timeline')" id="mob-tab-timeline" class="text-indigo-600">Timeline Settimanale</button>
-        <button onclick="mostraTab('ferie2027')" id="mob-tab-ferie2027" class="text-slate-600">🏖️ Piano Ferie 2027</button>
+        <button onclick="mostraTab('timeline')" id="mob-tab-timeline" class="text-indigo-600">Timeline</button>
+        <button onclick="mostraTab('ferie2027')" id="mob-tab-ferie2027" class="text-slate-600">🏖️ Piano Ferie</button>
     </div>
 
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        <!-- SEZIONE 1: TIMELINE SETTIMANALE -->
+        <!-- SEZIONE 1: TIMELINE (Settimanale o Mensile) -->
         <div id="sezione-timeline" class="space-y-6">
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div class="flex items-center space-x-3 mb-1">
+                    <div class="flex items-center space-x-3 mb-2 flex-wrap gap-2">
+                        <!-- Switch Vista Settimanale / Mensile -->
                         <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
-                            <button onclick="cambiaSettimana(-1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors shadow-sm" title="Settimana precedente">
+                            <button onclick="impostaVista('settimana')" id="btn-vista-settimana" class="px-3 py-1 rounded-lg text-xs font-bold transition-all bg-white text-indigo-600 shadow-sm">Settimana</button>
+                            <button onclick="impostaVista('mese')" id="btn-vista-mese" class="px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">Mese</button>
+                        </div>
+
+                        <!-- Frecce di Navigazione Tempo -->
+                        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+                            <button onclick="cambiaTempo(-1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors shadow-sm" title="Precedente">
                                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
                             </button>
-                            <span id="label-settimana-corrente" class="text-xs font-bold text-indigo-600 uppercase tracking-wider px-3">Settimana</span>
-                            <button onclick="cambiaSettimana(1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors shadow-sm" title="Settimana successiva">
+                            <span id="label-periodo-corrente" class="text-xs font-bold text-indigo-600 uppercase tracking-wider px-3">Periodo</span>
+                            <button onclick="cambiaTempo(1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors shadow-sm" title="Successivo">
                                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -73,6 +80,7 @@
                     </div>
                     <h2 class="text-2xl font-bold text-slate-900">Pianificazione Team</h2>
                 </div>
+
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
                         <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="bg-transparent px-3 py-1.5 text-sm focus:outline-none w-40 sm:w-48">
@@ -234,7 +242,8 @@
         let pianoFerie2027 = JSON.parse(localStorage.getItem('team_ferie_2027')) || [];
 
         let cellaAttiva = { collega: '', dataKey: '' };
-        let offsetSettimana = 0;
+        let vistaCorrente = 'settimana'; // 'settimana' o 'mese'
+        let offsetTempo = 0; // Offset settimane o mesi
 
         function mostraTab(tab) {
             if(tab === 'timeline') {
@@ -252,68 +261,109 @@
             }
         }
 
-        function getGiorniLavorativiPerOffset(offset) {
-            let curr = new Date();
-            let day = curr.getDay();
-            let diff = curr.getDate() - day + (day == 0 ? -6 : 1);
-            let lunedi = new Date(curr.setDate(diff));
+        function formattaDataItaliana(isoString) {
+            if (!isoString) return '';
+            let parti = isoString.split('-');
+            if (parti.length !== 3) return isoString;
+            let anno = parti[0];
+            let meseIdx = parseInt(parti[1], 10) - 1;
+            let giorno = parti[2];
             
-            lunedi.setDate(lunedi.getDate() + (offset * 7));
-
-            let giorni = [];
-            let nomiGiorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
             let mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            return `${giorno} ${mesi[meseIdx]} ${anno}`;
+        }
 
-            for (let i = 0; i < 5; i++) {
-                let d = new Date(lunedi);
-                d.setDate(lunedi.getDate() + i);
-                let giornoNome = nomiGiorni[i];
-                let giornoNum = d.getDate();
-                let meseStr = mesi[d.getMonth()];
-                
-                let dataKey = d.toISOString().split('T')[0];
+        function impostaVista(tipo) {
+            vistaCorrente = tipo;
+            offsetTempo = 0;
+            if(tipo === 'settimana') {
+                document.getElementById('btn-vista-settimana').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all bg-white text-indigo-600 shadow-sm";
+                document.getElementById('btn-vista-mese').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+            } else {
+                document.getElementById('btn-vista-settimana').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+                document.getElementById('btn-vista-mese').className = "px-3 py-1 rounded-lg text-xs font-bold transition-all bg-white text-indigo-600 shadow-sm";
+            }
+            aggiornaVistaTempo();
+        }
 
-                giorni.push({ 
-                    nome: giornoNome, 
-                    label: `${giornoNome} ${giornoNum} ${meseStr}`, 
-                    dataKey: dataKey 
-                });
+        function getColonnaGiorni() {
+            let giorni = [];
+            let mesiNomi = ['Gennaio', Feb = 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            let mesiBrevi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            let nomiGiorniBrevi = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+
+            if (vistaCorrente === 'settimana') {
+                let curr = new Date();
+                let day = curr.getDay();
+                let diff = curr.getDate() - day + (day == 0 ? -6 : 1);
+                let lunedi = new Date(curr.setDate(diff));
+                lunedi.setDate(lunedi.getDate() + (offsetTempo * 7));
+
+                for (let i = 0; i < 5; i++) {
+                    let d = new Date(lunedi);
+                    d.setDate(lunedi.getDate() + i);
+                    let nomeGiorno = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'][i];
+                    let dataKey = d.toISOString().split('T')[0];
+                    giorni.push({
+                        label: `${nomeGiorno} ${d.getDate()} ${mesiBrevi[d.getMonth()]} ${d.getFullYear()}`,
+                        dataKey: dataKey
+                    });
+                }
+                let primo = giorni[0].label;
+                let ultimo = giorni[4].label;
+                document.getElementById('label-periodo-corrente').innerText = `${primo} — ${ultimo}`;
+
+            } else {
+                // Vista Mensile
+                let dataBase = new Date();
+                dataBase.setMonth(dataBase.getMonth() + offsetTempo);
+                let anno = dataBase.getFullYear();
+                let mese = dataBase.getMonth();
+
+                document.getElementById('label-periodo-corrente').innerText = `${mesiNomi[mese]} ${anno}`;
+
+                let giorniNelMese = new Date(anno, mese + 1, 0).getDate();
+                for (let giorno = 1; giorno <= giorniNelMese; giorno++) {
+                    let d = new Date(anno, mese, giorno);
+                    // Escludi Sabato (6) e Domenica (0) se vuoi mostrare solo lavorativi, oppure includili tutti
+                    if (d.getDay() !== 0 && d.getDay() !== 6) {
+                        let dataKey = d.toISOString().split('T')[0];
+                        let nomeBreveGiorno = nomiGiorniBrevi[d.getDay()];
+                        giorni.push({
+                            label: `${nomeBreveGiorno} ${giorno} ${mesiBrevi[mese]}`,
+                            dataKey: dataKey
+                        });
+                    }
+                }
             }
             return giorni;
         }
 
-        let giorniLavorativi = [];
+        let colonneCorrenti = [];
 
-        function aggiornaVistaSettimana() {
-            giorniLavorativi = getGiorniLavorativiPerOffset(offsetSettimana);
-            
-            if(giorniLavorativi.length > 0) {
-                let primo = giorniLavorativi[0].label;
-                let ultimo = giorniLavorativi[4].label;
-                document.getElementById('label-settimana-corrente').innerText = `${primo} - ${ultimo}`;
-            }
-
+        function aggiornaVistaTempo() {
+            colonneCorrenti = getColonnaGiorni();
             renderHeader();
             renderTimeline();
         }
 
-        function cambiaSettimana(direzione) {
-            offsetSettimana += direzione;
-            aggiornaVistaSettimana();
+        function cambiaTempo(direzione) {
+            offsetTempo += direzione;
+            aggiornaVistaTempo();
         }
 
         function vaiOggi() {
-            offsetSettimana = 0;
-            aggiornaVistaSettimana();
+            offsetTempo = 0;
+            aggiornaVistaTempo();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            aggiornaVistaSettimana();
+            aggiornaVistaTempo();
         });
 
         function renderHeader() {
             const headerTr = document.getElementById('timeline-header');
-            let thCols = giorniLavorativi.map(g => `<th class="py-4 px-3 text-center">${g.label}</th>`).join('');
+            let thCols = colonneCorrenti.map(g => `<th class="py-4 px-2 text-center text-[11px] whitespace-nowrap">${g.label}</th>`).join('');
             headerTr.innerHTML = `
                 <th class="py-4 px-6 w-56">Dipendente</th>
                 ${thCols}
@@ -325,18 +375,17 @@
             const tbody = document.getElementById('timeline-body');
             
             if (colleghi.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400 italic">Nessun dipendente registrato.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="py-12 text-center text-slate-400 italic">Nessun dipendente registrato.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = colleghi.map(collega => {
                 if (!pianificazione[collega]) pianificazione[collega] = {};
 
-                let celleGiorni = giorniLavorativi.map(g => {
-                    // Controlla prima se c'è un'impostazione manuale sulla timeline, altrimenti verifica se ricade nel piano ferie 2027
+                let celleGiorni = colonneCorrenti.map(g => {
                     let giust = pianificazione[collega][g.dataKey] || '';
                     if(!giust) {
-                        // Verifica se la dataKey rientra in qualche periodo di ferie 2027 registrato
+                        // Verifica corretta nell'intervallo esatto del piano ferie
                         let inFerie = pianoFerie2027.some(f => f.collega === collega && g.dataKey >= f.dataInizio && g.dataKey <= f.dataFine);
                         if(inFerie) giust = 'Ferie';
                     }
@@ -350,9 +399,9 @@
                     else if(giust === 'Smart Working') { styleClass = "bg-emerald-500 text-white font-medium shadow-sm border-transparent"; testo = "Smart"; }
 
                     return `
-                        <td class="py-3.5 px-2 text-center">
-                            <button onclick="apriModalStato('${collega}', '${g.dataKey}', '${g.label}')" class="w-full py-2.5 px-2 rounded-2xl border text-xs transition-all flex items-center justify-center space-x-1 cursor-pointer ${styleClass}">
-                                <span class="truncate">${testo}</span>
+                        <td class="py-3 px-1 text-center">
+                            <button onclick="apriModalStato('${collega}', '${g.dataKey}', '${g.label}')" class="w-full py-2 px-1 rounded-xl border text-[11px] transition-all flex items-center justify-center cursor-pointer ${styleClass}" title="${testo}">
+                                <span class="truncate">${testo === 'Ufficio' ? '-' : testo.substring(0, 5)}</span>
                             </button>
                         </td>
                     `;
@@ -425,6 +474,7 @@
             pianoFerie2027.push({ id: Date.now(), collega, dataInizio, dataFine });
             salvaTutto();
             renderTabellaFerie2027();
+            renderTimeline();
             alert('Periodo di ferie 2027 aggiunto con successo!');
         }
 
@@ -432,6 +482,7 @@
             pianoFerie2027 = pianoFerie2027.filter(f => f.id !== id);
             salvaTutto();
             renderTabellaFerie2027();
+            renderTimeline();
         }
 
         function renderTabellaFerie2027() {
@@ -444,8 +495,8 @@
             tbody.innerHTML = pianoFerie2027.map(f => `
                 <tr class="hover:bg-slate-50 transition-colors">
                     <td class="py-3 px-4 font-semibold text-slate-800">${f.collega}</td>
-                    <td class="py-3 px-4 text-slate-600">${f.dataInizio}</td>
-                    <td class="py-3 px-4 text-slate-600">${f.dataFine}</td>
+                    <td class="py-3 px-4 text-slate-600">${formattaDataItaliana(f.dataInizio)}</td>
+                    <td class="py-3 px-4 text-slate-600">${formattaDataItaliana(f.dataFine)}</td>
                     <td class="py-3 px-4 text-right">
                         <button onclick="rimuoviPeriodoFerie2027(${f.id})" class="text-slate-400 hover:text-rose-600 p-1.5 transition-colors rounded-lg hover:bg-rose-50" title="Elimina">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -489,7 +540,7 @@
         }
 
         // Config Firebase
-        function apriConfigModal() { document.getElementById('config-modal').classList.remove('hidden'); }
+        function apriConfigModal() { document.getElementById('config-modal').classList.add('hidden'); document.getElementById('config-modal').classList.remove('hidden'); }
         function chiudiConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
         function salvaConfigFirebase() {
             const val = document.getElementById('firebase-config-input').value.trim();
