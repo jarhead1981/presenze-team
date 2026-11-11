@@ -102,7 +102,7 @@
 
             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="timeline-scroll overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[800px]">
+                    <table id="tabella-timeline" class="w-full text-left border-collapse" style="min-width:800px">
                         <thead>
                             <tr id="timeline-header" class="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider"></tr>
                         </thead>
@@ -364,6 +364,12 @@
             const mesiBrevi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
             const giorniBrevi = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
             const giorniLunghi = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
+            const oggiKey = dataKey(new Date());
+            const crea = (d, label) => {
+                const k = dataKey(d);
+                return { label, dataKey: k, dow: giorniBrevi[d.getDay()], num: d.getDate(),
+                         oggi: k === oggiKey, festivo: festivoDel(d), lunedi: d.getDay() === 1 };
+            };
 
             if (vistaCorrente === 'settimana') {
                 const oggi = new Date();
@@ -371,10 +377,7 @@
                 const lunedi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + (wd === 0 ? -6 : 1 - wd) + offsetTempo * 7);
                 for (let i = 0; i < 5; i++) {
                     const d = new Date(lunedi.getFullYear(), lunedi.getMonth(), lunedi.getDate() + i);
-                    giorni.push({
-                        label: `${giorniLunghi[i]} ${d.getDate()} ${mesiBrevi[d.getMonth()]}`,
-                        dataKey: dataKey(d)
-                    });
+                    giorni.push(crea(d, `${giorniLunghi[i]} ${d.getDate()} ${mesiBrevi[d.getMonth()]}`));
                 }
                 const f = new Date(lunedi.getFullYear(), lunedi.getMonth(), lunedi.getDate() + 4);
                 document.getElementById('label-periodo-corrente').innerText =
@@ -387,12 +390,36 @@
                 for (let g = 1; g <= n; g++) {
                     const d = new Date(anno, mese, g);
                     if (d.getDay() !== 0 && d.getDay() !== 6) {
-                        giorni.push({ label: `${giorniBrevi[d.getDay()]} ${g}`, dataKey: dataKey(d) });
+                        giorni.push(crea(d, `${giorniBrevi[d.getDay()]} ${g} ${mesiBrevi[mese]}`));
                     }
                 }
             }
             return giorni;
         }
+
+        /* ---------- Festività italiane ---------- */
+        const cacheFestivi = {};
+        function pasqua(a) {
+            const A = a % 19, B = Math.floor(a / 100), C = a % 100, D = Math.floor(B / 4), E = B % 4;
+            const F = Math.floor((B + 8) / 25), G = Math.floor((B - F + 1) / 3);
+            const H = (19 * A + B - D - G + 15) % 30, I = Math.floor(C / 4), K = C % 4;
+            const L = (32 + 2 * E + 2 * I - H - K) % 7, M = Math.floor((A + 11 * H + 22 * L) / 451);
+            const mese = Math.floor((H + L - 7 * M + 114) / 31), giorno = ((H + L - 7 * M + 114) % 31) + 1;
+            return new Date(a, mese - 1, giorno);
+        }
+        function festiviAnno(a) {
+            if (cacheFestivi[a]) return cacheFestivi[a];
+            const f = {};
+            const fissi = [['01-01','Capodanno'],['01-06','Epifania'],['04-25','Liberazione'],['05-01','Festa del Lavoro'],
+                           ['06-02','Festa della Repubblica'],['08-15','Ferragosto'],['11-01','Ognissanti'],
+                           ['12-07','Sant\'Ambrogio (Milano)'],['12-08','Immacolata'],['12-25','Natale'],['12-26','Santo Stefano']];
+            fissi.forEach(([md, nome]) => { f[a + '-' + md] = nome; });
+            const p = pasqua(a);
+            f[dataKey(p)] = 'Pasqua';
+            f[dataKey(new Date(p.getFullYear(), p.getMonth(), p.getDate() + 1))] = 'Lunedì dell\'Angelo';
+            return (cacheFestivi[a] = f);
+        }
+        function festivoDel(d) { return festiviAnno(d.getFullYear())[dataKey(d)] || ''; }
 
         function aggiornaVistaTempo() {
             colonneCorrenti = getColonnaGiorni();
@@ -411,15 +438,30 @@
             tuttiGiust().forEach(g => {
                 html += chip(g.colore + '22', g.colore, g.colore + '55', `${esc(g.emoji)} ${esc(g.nome)}`);
             });
+            html += chip('#fff1f2', '#e11d48', '#fecdd3', '· Festivo');
             document.getElementById('legenda').innerHTML = html;
         }
 
         function renderHeader() {
             const mese = vistaCorrente === 'mese';
-            const th = colonneCorrenti.map(g =>
-                `<th class="${mese ? 'py-3 px-0.5 text-[10px]' : 'py-4 px-2 text-[11px]'} text-center whitespace-nowrap">${g.label}</th>`).join('');
+            document.getElementById('tabella-timeline').style.minWidth = mese ? (200 + colonneCorrenti.length * 38 + 190) + 'px' : '800px';
+            const th = colonneCorrenti.map((g, i) => {
+                if (mese) {
+                    const sep = g.lunedi && i > 0 ? ' border-l-2 border-slate-200' : '';
+                    const tint = g.oggi ? ' bg-indigo-50' : (g.festivo ? ' bg-rose-50/70' : '');
+                    const numCls = g.oggi ? 'bg-indigo-600 text-white shadow-sm' : (g.festivo ? 'text-rose-600' : 'text-slate-700');
+                    return `<th class="px-0.5 py-2 text-center${sep}${tint}" title="${esc(g.festivo || g.label)}">
+                        <div class="text-[9px] font-semibold tracking-wide ${g.festivo ? 'text-rose-400' : 'text-slate-400'}">${g.dow}</div>
+                        <div class="mx-auto mt-0.5 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold ${numCls}">${g.num}</div>
+                    </th>`;
+                }
+                const tint = g.oggi ? ' bg-indigo-50 text-indigo-600' : (g.festivo ? ' bg-rose-50/70 text-rose-500' : '');
+                return `<th class="py-4 px-2 text-center text-[11px] whitespace-nowrap${tint}">${g.label}${g.festivo ? `<div class="normal-case font-medium text-[10px]">${esc(g.festivo)}</div>` : ''}</th>`;
+            }).join('');
             document.getElementById('timeline-header').innerHTML =
-                `<th class="py-4 px-6 w-56">Dipendente</th>${th}<th class="py-4 px-3 text-center w-16">Azioni</th>`;
+                `<th class="py-4 px-4 ${mese ? 'w-48' : 'w-56'} sticky left-0 z-20 bg-slate-50">Dipendente</th>${th}` +
+                (mese ? '<th class="py-4 px-3 text-left">Riepilogo</th>' : '') +
+                `<th class="py-4 px-3 text-center w-16">Azioni</th>`;
         }
 
         function giustificativoDelGiorno(collega, key) {
@@ -436,44 +478,89 @@
             }
             const mese = vistaCorrente === 'mese';
 
-            tbody.innerHTML = colleghi.map((collega, idx) => {
-                const celle = colonneCorrenti.map(g => {
+            let righe = colleghi.map((collega, idx) => {
+                const conteggi = {};
+                let uff = 0;
+
+                const celle = colonneCorrenti.map((g, i) => {
                     const gi = trovaGiust(giustificativoDelGiorno(collega, g.dataKey));
-                    let style = '', contenuto = mese ? '<span class="text-sm leading-none">🏦</span>' : '<span class="mr-1">🏦</span><span class="text-slate-500">Ufficio</span>', title = 'Ufficio';
-                    let cls = 'bg-slate-50 border-slate-200 hover:border-slate-300';
+                    if (gi) conteggi[gi.id] = (conteggi[gi.id] || 0) + 1;
+                    else if (!g.festivo) uff++;
+
+                    const sep = mese && g.lunedi && i > 0 ? ' border-l-2 border-slate-200' : '';
+                    const tint = g.oggi ? ' bg-indigo-50/70' : (g.festivo ? ' bg-rose-50/50' : '');
+                    let style = '', cls, contenuto, title;
+
                     if (gi) {
-                        cls = 'border-transparent text-white font-medium shadow-sm';
                         style = `background:${gi.colore}`;
                         title = gi.nome;
+                        cls = 'text-white font-medium shadow-sm border-transparent hover:brightness-110 hover:scale-105';
                         contenuto = mese
-                            ? `<span class="text-sm leading-none">${esc(gi.emoji)}</span>`
+                            ? `<span class="text-base leading-none">${esc(gi.emoji)}</span>`
                             : `<span class="mr-1">${esc(gi.emoji)}</span><span class="truncate">${esc(gi.nome.length > 9 ? gi.nome.slice(0, 8) + '…' : gi.nome)}</span>`;
+                    } else if (g.festivo) {
+                        title = g.festivo;
+                        cls = 'bg-transparent border-dashed border-rose-200 text-rose-300 hover:border-rose-300';
+                        contenuto = mese ? '<span class="text-xs">·</span>' : `<span class="text-[10px] truncate">${esc(g.festivo.length > 12 ? g.festivo.slice(0, 11) + '…' : g.festivo)}</span>`;
+                    } else {
+                        title = 'Ufficio';
+                        cls = 'bg-slate-50 border-slate-200 hover:border-indigo-300 hover:bg-white hover:scale-105';
+                        contenuto = mese ? '<span class="text-base leading-none opacity-70">🏦</span>'
+                                          : '<span class="mr-1">🏦</span><span class="text-slate-500">Ufficio</span>';
                     }
-                    return `<td class="${mese ? 'py-2 px-0.5' : 'py-3 px-1'} text-center">
+
+                    const size = mese ? 'w-8 h-8 mx-auto' : 'w-full py-2 px-1';
+                    return `<td class="${mese ? 'py-1.5 px-0.5' : 'py-3 px-1'} text-center${sep}${tint}">
                         <button onclick="apriModalStato(${idx}, '${g.dataKey}', '${g.label}')" style="${style}" title="${esc(title)}"
-                            class="w-full ${mese ? 'py-1.5 min-w-[26px]' : 'py-2 px-1'} rounded-xl border text-[11px] transition-all flex items-center justify-center cursor-pointer ${cls}">${contenuto}</button>
+                            class="${size} rounded-lg border text-[11px] transition-all flex items-center justify-center cursor-pointer ${cls}">${contenuto}</button>
                     </td>`;
                 }).join('');
 
+                let riepilogo = '';
+                if (mese) {
+                    const badge = (bg, fg, txt) => `<span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold" style="background:${bg};color:${fg}">${txt}</span>`;
+                    let b = badge('#f1f5f9', '#475569', `🏦 ${uff}`);
+                    tuttiGiust().forEach(g => { if (conteggi[g.id]) b += badge(g.colore + '22', g.colore, `${esc(g.emoji)} ${conteggi[g.id]}`); });
+                    riepilogo = `<td class="py-2 px-3"><div class="flex flex-wrap gap-1">${b}</div></td>`;
+                }
+
                 const iniziali = collega.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                return `<tr class="hover:bg-slate-50/70 transition-colors">
-                    <td class="py-4 px-6">
-                        <div class="flex items-center space-x-3.5">
-                            <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center font-bold text-xs justify-center flex-shrink-0 shadow-sm">${esc(iniziali)}</div>
+                return `<tr class="group hover:bg-slate-50/70 transition-colors">
+                    <td class="${mese ? 'py-2' : 'py-4'} px-4 sticky left-0 z-10 bg-white group-hover:bg-slate-50 shadow-[2px_0_4px_-2px_rgba(15,23,42,0.08)]">
+                        <div class="flex items-center space-x-3">
+                            <div class="${mese ? 'w-8 h-8 rounded-xl' : 'w-10 h-10 rounded-2xl'} bg-indigo-100 text-indigo-700 flex items-center font-bold text-xs justify-center flex-shrink-0 shadow-sm">${esc(iniziali)}</div>
                             <div class="min-w-0">
-                                <span class="font-bold text-slate-900 block truncate">${esc(collega)}</span>
-                                <span class="text-[11px] text-slate-400 block font-medium">Team Aziendale</span>
+                                <span class="font-bold text-slate-900 block truncate ${mese ? 'text-[13px] max-w-[120px]' : ''}">${esc(collega)}</span>
+                                ${mese ? '' : '<span class="text-[11px] text-slate-400 block font-medium">Team Aziendale</span>'}
                             </div>
                         </div>
                     </td>
                     ${celle}
-                    <td class="py-4 px-2 text-center">
+                    ${riepilogo}
+                    <td class="py-2 px-2 text-center">
                         <button onclick="rimuoviCollega(${idx})" class="text-slate-400 hover:text-rose-600 p-2 transition-colors rounded-xl hover:bg-rose-50" title="Rimuovi collega">
                             <span class="ico w-4 h-4" data-icon="trash-2"></span>
                         </button>
                     </td>
                 </tr>`;
             }).join('');
+
+            // Riga "In sede" con il conteggio dei presenti per giorno (solo vista mensile)
+            if (mese) {
+                const tot = colleghi.length;
+                const celleSede = colonneCorrenti.map((g, i) => {
+                    const sep = g.lunedi && i > 0 ? ' border-l-2 border-slate-200' : '';
+                    if (g.festivo) return `<td class="py-2 text-center text-[11px] text-rose-300${sep}">–</td>`;
+                    const inSede = colleghi.filter(c => !trovaGiust(giustificativoDelGiorno(c, g.dataKey))).length;
+                    const col = inSede === 0 ? 'text-rose-600 bg-rose-50' : (inSede < tot / 2 ? 'text-amber-700 bg-amber-50' : 'text-emerald-700 bg-emerald-50');
+                    return `<td class="py-2 px-0.5 text-center${sep}"><span class="inline-block min-w-[26px] rounded-md px-1 py-0.5 text-[11px] font-bold ${col}" title="${inSede} su ${tot} in sede">${inSede}</span></td>`;
+                }).join('');
+                righe += `<tr class="bg-slate-50/80 border-t-2 border-slate-200">
+                    <td class="py-2.5 px-4 sticky left-0 z-10 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">🏦 In sede</td>
+                    ${celleSede}<td></td><td></td></tr>`;
+            }
+
+            tbody.innerHTML = righe;
             idratIcone(tbody);
         }
 
