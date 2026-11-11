@@ -229,7 +229,6 @@
                         <select id="nuovo-giust-icona" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
                             <option value="sun">Sun (Sole)</option>
                             <option value="clock">Clock (Orologio)</option>
-                            <option value="thermometer">Thermometer (Malattia)</option>
                             <option value="laptop">Laptop (Smart)</option>
                             <option value="briefcase">Briefcase (Lavoro)</option>
                             <option value="calendar">Calendar (Calendario)</option>
@@ -244,10 +243,10 @@
                         <select id="nuovo-giust-colore" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
                             <option value="purple">Viola (Ferie)</option>
                             <option value="blue">Blu (Permesso)</option>
-                            <option value="rose">Rosa/Rosso (Malattia)</option>
                             <option value="emerald">Verde (Smart)</option>
                             <option value="amber">Ambra / Arancio</option>
                             <option value="indigo">Indaco</option>
+                            <option value="rose">Rosa / Rosso</option>
                         </select>
                     </div>
                     <div>
@@ -282,11 +281,10 @@
         let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || {};
         let pianoFerie2027 = JSON.parse(localStorage.getItem('team_ferie_2027')) || [];
 
-        // Giustificativi predefiniti personalizzabili
+        // Giustificativi aggiornati senza Malattia
         let giustificativi = JSON.parse(localStorage.getItem('team_giustificativi')) || [
             { id: 'Ferie', label: 'Ferie', icon: 'sun', color: 'purple' },
             { id: 'Permesso', label: 'Permesso', icon: 'clock', color: 'blue' },
-            { id: 'Malattia', label: 'Malattia', icon: 'thermometer', color: 'rose' },
             { id: 'Smart Working', label: 'Smart Working', icon: 'laptop', color: 'emerald' }
         ];
 
@@ -484,7 +482,6 @@
                             contenutoHtml = `<span class="truncate">${matchGiust.label.substring(0, 6)}</span>`;
                             titleTooltip = matchGiust.label;
                         } else {
-                            // Fallback per vecchi valori salvati
                             styleClass = "bg-purple-500 text-white font-medium shadow-sm border-transparent";
                             contenutoHtml = `<span class="truncate">${giustId.substring(0, 5)}</span>`;
                             titleTooltip = giustId;
