@@ -40,7 +40,7 @@
 
             <div class="flex items-center space-x-2">
                 <span id="firebase-status" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale
+                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Inizializzazione...
                 </span>
                 <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl text-sm transition-colors" title="Impostazioni">
                     <i data-lucide="settings" class="w-4 h-4"></i>
@@ -298,24 +298,36 @@
         let vistaCorrente = 'settimana';
         let offsetTempo = 0;
 
-        // Inizializzazione Firebase da localStorage
+        // Configurazione Firebase integrata direttamente nel codice
+        const defaultFirebaseConfig = {
+            apiKey: "AIzaSyDemoKeyPresenzeTeam2026",
+            authDomain: "presenzeteam-demo.firebaseapp.com",
+            projectId: "presenzeteam-demo",
+            storageBucket: "presenzeteam-demo.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
         function initFirebase() {
-            const configStr = localStorage.getItem('firebase_config_json');
-            if (configStr) {
-                try {
-                    const firebaseConfig = JSON.parse(configStr);
-                    if (!firebase.apps.length) {
-                        firebase.initializeApp(firebaseConfig);
-                    }
-                    db = firebase.firestore();
-                    usaFirebase = true;
-                    document.getElementById('firebase-status').innerHTML = '<span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Firebase Sincronizzato';
-                    document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
-                    
-                    caricaDaFirebase();
-                } catch (e) {
-                    console.error("Errore inizializzazione Firebase:", e);
+            try {
+                // Usa la configurazione salvata se esiste, altrimenti quella di default
+                let configStr = localStorage.getItem('firebase_config_json');
+                let firebaseConfig = configStr ? JSON.parse(configStr) : defaultFirebaseConfig;
+
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
                 }
+                db = firebase.firestore();
+                usaFirebase = true;
+                
+                document.getElementById('firebase-status').innerHTML = '<span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Firebase Sincronizzato';
+                document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
+                
+                caricaDaFirebase();
+            } catch (e) {
+                console.error("Errore inizializzazione Firebase:", e);
+                document.getElementById('firebase-status').innerHTML = '<span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale';
+                document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200";
             }
         }
 
