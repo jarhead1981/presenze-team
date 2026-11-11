@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PresenzeTeam - Timeline</title>
+    <title>PresenzeTeam - Timeline ed Eventi</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Inter & Icone Lucide -->
@@ -25,7 +25,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-base sm:text-lg text-slate-900 leading-tight">PresenzeTeam</h1>
-                    <p class="text-[11px] text-slate-500">Timeline & Gestione Presenze</p>
+                    <p class="text-[11px] text-slate-500">Timeline & Bacheca Eventi</p>
                 </div>
             </div>
             
@@ -43,7 +43,71 @@
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        <!-- Header Dashboard -->
+        <!-- NUOVA SEZIONE: Bacheca, Celebrazioni e Prossimi Eventi (ispirata all'immagine) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Widget Celebrazioni / Compleanni Colleghi -->
+            <div class="lg:col-span-5 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Prossime celebrazioni</h3>
+                        <div class="flex space-x-1 text-slate-400">
+                            <button class="p-1 hover:text-slate-600"><i data-lucide="arrow-left" class="w-4 h-4"></i></button>
+                            <button class="p-1 hover:text-slate-600"><i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50/80 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
+                            <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 font-bold mx-auto flex items-center justify-center text-sm shadow-inner">
+                                ML
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Marco Lotti</h4>
+                                <p class="text-[11px] text-slate-500">17 Febbraio</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50/80 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
+                            <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-700 font-bold mx-auto flex items-center justify-center text-sm shadow-inner">
+                                LA
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Luana Andreoni</h4>
+                                <p class="text-[11px] text-slate-500">17 Febbraio</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget Prossimi Eventi / Tornei aziendali -->
+            <div class="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Prossimi eventi</h3>
+                    <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex items-start justify-between">
+                        <div class="space-y-1.5">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                <h4 class="font-bold text-slate-900 text-sm">Torneo di Padel</h4>
+                            </div>
+                            <p class="text-xs text-slate-600 flex items-center space-x-1.5">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
+                                <span>25 Marzo - 28 Marzo</span>
+                            </p>
+                            <p class="text-xs text-slate-500 flex items-center space-x-1.5">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-indigo-500"></i>
+                                <span>Piste di av. Burgos</span>
+                            </p>
+                        </div>
+                        <div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-md flex items-center justify-center">
+                            <i data-lucide="trophy" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Header Dashboard Timeline -->
         <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <div class="flex items-center space-x-2 text-indigo-600 font-semibold text-xs uppercase tracking-wider mb-1">
@@ -77,7 +141,7 @@
             <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">💻 Smart Working</span>
         </div>
 
-        <!-- Timeline / Tabella Principale in stile Dashboard moderna -->
+        <!-- Timeline / Tabella Principale -->
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="timeline-scroll overflow-x-auto">
                 <table class="w-full text-left border-collapse min-w-[800px]">
@@ -95,7 +159,7 @@
 
     </main>
 
-    <!-- Modal Cambio Stato Rapido (stile popup pulito) -->
+    <!-- Modal Cambio Stato Rapido -->
     <div id="modal-stato" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between">
@@ -197,7 +261,6 @@
                 let celleGiorni = giorniLavorativi.map(g => {
                     let giust = pianificazione[collega][g.nome] || '';
                     
-                    // Stile blocco pieno tipo Bizneo
                     let styleClass = "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300";
                     let testo = "Ufficio";
 
