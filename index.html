@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Firebase SDK Compat v10 -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7fc; }
@@ -18,6 +19,38 @@
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- SCHERMATA DI LOGIN (Nascosta se già autenticato o in locale) -->
+    <div id="auth-screen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="bg-indigo-600 text-white w-12 h-12 rounded-2xl mx-auto flex items-center justify-center shadow-lg">
+                    <i data-lucide="lock" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-900">Accesso Riservato</h2>
+                <p class="text-xs text-slate-500">Inserisci le credenziali aziendali per accedere a PresenzeTeam.</p>
+            </div>
+
+            <form onsubmit="eseguiLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Email Aziendale</label>
+                    <input type="email5" id="login-email" required placeholder="nome.cognome@azienda.it" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div id="login-error" class="text-xs text-rose-600 font-medium hidden text-center"></div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-2xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center justify-center space-x-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>Accedi al Sistema</span>
+                </button>
+            </form>
+            <div class="text-center pt-2">
+                <button onclick="saltaLoginLocale()" class="text-xs text-slate-400 hover:text-slate-600 underline">Usa in modalità locale (Senza Firebase)</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Top Navigation Bar -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
@@ -40,8 +73,11 @@
 
             <div class="flex items-center space-x-2">
                 <span id="firebase-status" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Inizializzazione...
+                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Offline
                 </span>
+                <button onclick="eseguiLogout()" id="btn-logout" class="hidden bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-2 rounded-xl text-xs font-medium transition-colors" title="Disconnetti">
+                    Esci
+                </button>
                 <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl text-sm transition-colors" title="Impostazioni">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
@@ -184,7 +220,7 @@
             <p id="modal-subtitle" class="text-xs text-slate-500">Seleziona lo stato per questo giorno:</p>
             
             <div id="modal-stati-list" class="grid grid-cols-1 gap-2.5 pt-2">
-                <!-- Generato dinamicamente in base ai giustificativi configurati -->
+                <!-- Generato dinamicamente -->
             </div>
         </div>
     </div>
@@ -195,7 +231,7 @@
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900">Impostazioni Applicazione</h3>
-                    <p class="text-xs text-slate-500">Gestisci i giustificativi con icone e la sincronizzazione Firebase.</p>
+                    <p class="text-xs text-slate-500">Gestisci i giustificativi e la configurazione Firebase.</p>
                 </div>
                 <button onclick="chiudiConfigModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
@@ -206,12 +242,8 @@
                     <i data-lucide="tag" class="w-4 h-4 text-indigo-600"></i>
                     <span>Personalizza Giustificativi e Stati</span>
                 </h4>
-                
-                <div id="lista-giustificativi-config" class="space-y-2">
-                    <!-- Popolato via JS -->
-                </div>
+                <div id="lista-giustificativi-config" class="space-y-2"></div>
 
-                <!-- Form Aggiunta Nuovo Giustificativo -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nome</label>
@@ -220,26 +252,24 @@
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 mb-1">Icona (Lucide)</label>
                         <select id="nuovo-giust-icona" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
-                            <option value="sun">Sun (Sole)</option>
-                            <option value="clock">Clock (Orologio)</option>
-                            <option value="laptop">Laptop (Smart)</option>
-                            <option value="briefcase">Briefcase (Lavoro)</option>
-                            <option value="calendar">Calendar (Calendario)</option>
-                            <option value="coffee">Coffee (Pausa)</option>
-                            <option value="plane">Plane (Viaggio)</option>
-                            <option value="shield">Shield (Protezione)</option>
-                            <option value="award">Award (Premio)</option>
+                            <option value="sun">Sun</option>
+                            <option value="clock">Clock</option>
+                            <option value="laptop">Laptop</option>
+                            <option value="briefcase">Briefcase</option>
+                            <option value="calendar">Calendar</option>
+                            <option value="coffee">Coffee</option>
+                            <option value="plane">Plane</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 mb-1">Colore Tema</label>
                         <select id="nuovo-giust-colore" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
-                            <option value="purple">Viola (Ferie)</option>
-                            <option value="blue">Blu (Permesso)</option>
-                            <option value="emerald">Verde (Smart)</option>
-                            <option value="amber">Ambra / Arancio</option>
+                            <option value="purple">Viola</option>
+                            <option value="blue">Blu</option>
+                            <option value="emerald">Verde</option>
+                            <option value="amber">Ambra</option>
                             <option value="indigo">Indaco</option>
-                            <option value="rose">Rosa / Rosso</option>
+                            <option value="rose">Rosa</option>
                         </select>
                     </div>
                     <div>
@@ -250,18 +280,18 @@
                 </div>
             </div>
 
-            <!-- Sezione 2: Configurazione Firebase -->
+            <!-- Sezione 2: Configurazione Firebase (JSON) -->
             <div class="space-y-3 pt-4 border-t border-slate-100">
                 <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
                     <i data-lucide="cloud" class="w-4 h-4 text-indigo-600"></i>
-                    <span>Configurazione Firebase (Opzionale)</span>
+                    <span>Configurazione Firebase (JSON)</span>
                 </h4>
                 <textarea id="firebase-config-input" rows="4" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='{ apiKey: "...", projectId: "..." }'></textarea>
             </div>
 
             <div class="flex justify-end space-x-3 pt-2">
                 <button onclick="chiudiConfigModal()" class="px-5 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-xl font-medium">Annulla</button>
-                <button onclick="salvaImpostazioniGenerali()" class="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md">Salva Modifiche</button>
+                <button onclick="salvaImpostazioniGenerali()" class="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md">Salva & Connetti</button>
             </div>
         </div>
     </div>
@@ -283,50 +313,95 @@
         let ufficioConfig = JSON.parse(localStorage.getItem('team_ufficio_config')) || { label: 'Ufficio / Banca', icon: 'landmark', color: 'indigo' };
 
         let db = null;
+        let auth = null;
         let usaFirebase = false;
         let cellaAttiva = { collega: '', dataKey: '' };
         let vistaCorrente = 'settimana';
         let offsetTempo = 0;
 
-        const defaultFirebaseConfig = {
-            apiKey: "AIzaSyDemoKeyPresenzeTeam2026",
-            authDomain: "presenzeteam-demo.firebaseapp.com",
-            projectId: "presenzeteam-demo",
-            storageBucket: "presenzeteam-demo.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdef123456"
-        };
-
+        // Inizializzazione Firebase da localStorage (senza chiavi hardcoded nel codice)
         function initFirebase() {
-            try {
-                let configStr = localStorage.getItem('firebase_config_json');
-                let firebaseConfig = configStr ? JSON.parse(configStr) : defaultFirebaseConfig;
+            const configStr = localStorage.getItem('firebase_config_json');
+            if (configStr) {
+                try {
+                    const firebaseConfig = JSON.parse(configStr);
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    db = firebase.firestore();
+                    auth = firebase.auth();
+                    usaFirebase = true;
 
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
+                    // Monitora lo stato dell'autenticazione
+                    auth.onAuthStateChanged(user => {
+                        if (user) {
+                            document.getElementById('auth-screen').classList.add('hidden');
+                            document.getElementById('btn-logout').classList.remove('hidden');
+                            document.getElementById('firebase-status').innerHTML = `<span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> ${user.email}`;
+                            document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
+                            caricaDaFirebase();
+                        } else {
+                            document.getElementById('auth-screen').classList.remove('hidden');
+                            document.getElementById('btn-logout').classList.add('hidden');
+                        }
+                    });
+                } catch (e) {
+                    console.error("Configurazione Firebase non valida:", e);
+                    attivaModalitaLocale();
                 }
-                db = firebase.firestore();
-                usaFirebase = true;
-                
-                document.getElementById('firebase-status').innerHTML = '<span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Firebase Sincronizzato';
-                document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
-                
-                caricaDaFirebase();
-            } catch (e) {
-                console.error("Errore inizializzazione Firebase:", e);
-                document.getElementById('firebase-status').innerHTML = '<span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale';
-                document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200";
+            } else {
+                // Se non c'è configurazione, attiva modalità locale o mostra il modal impostazioni
+                attivaModalitaLocale();
             }
+        }
+
+        function attivaModalitaLocale() {
+            usaFirebase = false;
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('firebase-status').innerHTML = '<span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale';
+            document.getElementById('firebase-status').className = "hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200";
+        }
+
+        async function eseguiLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errBox = document.getElementById('login-error');
+            errBox.classList.add('hidden');
+
+            if (!auth) {
+                errBox.innerText = "Configura prima le credenziali Firebase nelle impostazioni (icona ingranaggio in alto).";
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                errBox.innerText = "Credenziali non valide o accesso non autorizzato.";
+                errBox.classList.remove('hidden');
+            }
+        }
+
+        async function eseguiLogout() {
+            if (auth) {
+                await auth.signOut();
+                location.reload();
+            }
+        }
+
+        function saltaLoginLocale() {
+            attivaModalitaLocale();
         }
 
         function getColorClasses(color) {
             switch(color) {
-                case 'purple': return { badge: 'bg-purple-500 text-white', border: 'border-purple-200', bgHover: 'bg-purple-50 hover:bg-purple-100 text-purple-700', dot: 'bg-purple-500', lightBg: 'bg-purple-50 text-purple-700 border-purple-200' };
-                case 'blue': return { badge: 'bg-blue-500 text-white', border: 'border-blue-200', bgHover: 'bg-blue-50 hover:bg-blue-100 text-blue-700', dot: 'bg-blue-500', lightBg: 'bg-blue-50 text-blue-700 border-blue-200' };
-                case 'rose': return { badge: 'bg-rose-500 text-white', border: 'border-rose-200', bgHover: 'bg-rose-50 hover:bg-rose-100 text-rose-700', dot: 'bg-rose-500', lightBg: 'bg-rose-50 text-rose-700 border-rose-200' };
-                case 'emerald': return { badge: 'bg-emerald-500 text-white', border: 'border-emerald-200', bgHover: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', lightBg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-                case 'amber': return { badge: 'bg-amber-500 text-white', border: 'border-amber-200', bgHover: 'bg-amber-50 hover:bg-amber-100 text-amber-700', dot: 'bg-amber-500', lightBg: 'bg-amber-50 text-amber-700 border-amber-200' };
-                case 'indigo': default: return { badge: 'bg-indigo-600 text-white', border: 'border-indigo-200', bgHover: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700', dot: 'bg-indigo-600', lightBg: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
+                case 'purple': return { badge: 'bg-purple-500 text-white', border: 'border-purple-200', bgHover: 'bg-purple-50 hover:bg-purple-100 text-purple-700', lightBg: 'bg-purple-50 text-purple-700 border-purple-200' };
+                case 'blue': return { badge: 'bg-blue-500 text-white', border: 'border-blue-200', bgHover: 'bg-blue-50 hover:bg-blue-100 text-blue-700', lightBg: 'bg-blue-50 text-blue-700 border-blue-200' };
+                case 'rose': return { badge: 'bg-rose-500 text-white', border: 'border-rose-200', bgHover: 'bg-rose-50 hover:bg-rose-100 text-rose-700', lightBg: 'bg-rose-50 text-rose-700 border-rose-200' };
+                case 'emerald': return { badge: 'bg-emerald-500 text-white', border: 'border-emerald-200', bgHover: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700', lightBg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+                case 'amber': return { badge: 'bg-amber-500 text-white', border: 'border-amber-200', bgHover: 'bg-amber-50 hover:bg-amber-100 text-amber-700', lightBg: 'bg-amber-50 text-amber-700 border-amber-200' };
+                case 'indigo': default: return { badge: 'bg-indigo-600 text-white', border: 'border-indigo-200', bgHover: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700', lightBg: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
             }
         }
 
@@ -353,7 +428,6 @@
             let anno = parti[0];
             let meseIdx = parseInt(parti[1], 10) - 1;
             let giorno = parti[2];
-            
             let mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
             return `${giorno} ${mesi[meseIdx]} ${anno}`;
         }
@@ -397,13 +471,11 @@
                 let primo = giorni[0].label;
                 let ultimo = giorni[4].label;
                 document.getElementById('label-periodo-corrente').innerText = `${primo} — ${ultimo}`;
-
             } else {
                 let dataBase = new Date();
                 dataBase.setMonth(dataBase.getMonth() + offsetTempo);
                 let anno = dataBase.getFullYear();
                 let mese = dataBase.getMonth();
-
                 document.getElementById('label-periodo-corrente').innerText = `${mesiNomi[mese]} ${anno}`;
 
                 let giorniNelMese = new Date(anno, mese + 1, 0).getDate();
@@ -480,7 +552,6 @@
 
         function renderTimeline() {
             const tbody = document.getElementById('timeline-body');
-            
             if (colleghi.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="10" class="py-12 text-center text-slate-400 italic">Nessun dipendente registrato.</td></tr>`;
                 return;
@@ -588,10 +659,9 @@
             pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = valore;
             chiudiModalStato();
             renderTimeline();
-            salvaAutomatico(); // Salvataggio automatico senza alert
+            salvaAutomatico();
         }
 
-        // Gestione Piano Ferie 2027
         function aggiornaSelectFerieColleghi() {
             const sel = document.getElementById('ferie-collega-select');
             sel.innerHTML = colleghi.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -602,14 +672,8 @@
             const dataInizio = document.getElementById('ferie-data-inizio').value;
             const dataFine = document.getElementById('ferie-data-fine').value;
 
-            if(!dataInizio || !dataFine) {
-                alert('Seleziona sia la data di inizio che quella di fine.');
-                return;
-            }
-            if(dataInizio > dataFine) {
-                alert('La data di inizio non può essere successiva alla data di fine.');
-                return;
-            }
+            if(!dataInizio || !dataFine) { alert('Seleziona le date.'); return; }
+            if(dataInizio > dataFine) { alert('Data inizio successiva alla fine.'); return; }
 
             pianoFerie2027.push({ id: Date.now(), collega, dataInizio, dataFine });
             salvaAutomatico();
@@ -627,7 +691,7 @@
         function renderTabellaFerie2027() {
             const tbody = document.getElementById('tabella-ferie2027-body');
             if(pianoFerie2027.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400 italic">Nessun periodo di ferie registrato per il 2027.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400 italic">Nessun periodo registrato.</td></tr>`;
                 return;
             }
 
@@ -646,7 +710,6 @@
             lucide.createIcons();
         }
 
-        // Salvataggio automatico in background senza popup fastidiosi
         async function salvaAutomatico() {
             localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
             localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
@@ -654,7 +717,7 @@
             localStorage.setItem('team_giustificativi', JSON.stringify(giustificativi));
             localStorage.setItem('team_ufficio_config', JSON.stringify(ufficioConfig));
 
-            if (usaFirebase && db) {
+            if (usaFirebase && db && auth && auth.currentUser) {
                 try {
                     await db.collection('presenzeTeam').doc('datiGlobali').set({
                         colleghi,
@@ -665,12 +728,11 @@
                         aggiornatoIl: new Date().toISOString()
                     });
                 } catch (error) {
-                    console.error("Errore salvataggio automatico su Firestore: ", error);
+                    console.error("Errore salvataggio Cloud:", error);
                 }
             }
         }
 
-        // Caricamento dati da Firestore
         async function caricaDaFirebase() {
             if (!usaFirebase || !db) return;
             try {
@@ -688,7 +750,7 @@
                     renderTabellaFerie2027();
                 }
             } catch (error) {
-                console.error("Errore caricamento da Firestore: ", error);
+                console.error("Errore caricamento Cloud:", error);
             }
         }
 
@@ -706,7 +768,7 @@
         }
 
         function rimuoviCollega(nome) {
-            if(colleghi.length <= 1) { alert('Impossibile rimuovere l\'unico dipendente rimasto'); return; }
+            if(colleghi.length <= 1) { alert('Impossibile rimuovere l\'unico dipendente'); return; }
             if(confirm(`Vuoi rimuovere ${nome}?`)) {
                 colleghi = colleghi.filter(c => c !== nome);
                 delete pianificazione[nome];
@@ -717,7 +779,6 @@
             }
         }
 
-        // Gestione Impostazioni & Giustificativi
         function apriConfigModal() { 
             renderGiustificativiConfigList();
             const cfgSaved = localStorage.getItem('firebase_config_json');
@@ -739,11 +800,8 @@
                     <div class="flex items-center space-x-3">
                         <i data-lucide="${g.icon}" class="w-4 h-4 text-indigo-600"></i>
                         <span class="font-bold text-slate-800">${g.label}</span>
-                        <span class="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-200 text-slate-600">${g.color}</span>
                     </div>
-                    <button onclick="rimuoviGiustificativo(${idx})" class="text-slate-400 hover:text-rose-600 p-1 transition-colors" title="Elimina">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    <button onclick="rimuoviGiustificativo(${idx})" class="text-slate-400 hover:text-rose-600 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
@@ -751,17 +809,14 @@
 
         function aggiungiGiustificativo() {
             const nomeInput = document.getElementById('nuovo-giust-nome');
-            const iconSelect = document.getElementById('nuovo-giust-icona');
-            const coloreSelect = document.getElementById('nuovo-giust-colore');
-
             const nome = nomeInput.value.trim();
-            if(!nome) { alert('Inserisci un nome per il giustificativo'); return; }
+            if(!nome) return;
 
             giustificativi.push({
                 id: nome,
                 label: nome,
-                icon: iconSelect.value,
-                color: coloreSelect.value
+                icon: document.getElementById('nuovo-giust-icona').value,
+                color: document.getElementById('nuovo-giust-colore').value
             });
 
             nomeInput.value = '';
@@ -781,16 +836,14 @@
                 try {
                     const cfg = JSON.parse(valFirebase);
                     localStorage.setItem('firebase_config_json', JSON.stringify(cfg));
-                } catch(e) { alert('JSON Firebase non valido'); return; }
+                } catch(e) { alert('JSON non valido'); return; }
             } else {
                 localStorage.removeItem('firebase_config_json');
             }
 
             salvaAutomatico();
             chiudiConfigModal();
-            initFirebase();
-            renderTimeline();
-            renderLegenda();
+            location.reload();
         }
     </script>
 </body>
