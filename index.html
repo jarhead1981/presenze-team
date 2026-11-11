@@ -14,6 +14,9 @@
         .swatch { width: 28px; height: 28px; border-radius: 9999px; border: 3px solid transparent; cursor: pointer; }
         .swatch.sel { border-color: #0f172a; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
@@ -36,9 +39,7 @@
             </div>
 
             <div class="flex items-center space-x-2">
-                <span id="firebase-status" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                    <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale
-                </span>
+                <button id="firebase-status" onclick="clickBadge()" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Locale</button>
                 <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl transition-colors" title="Impostazioni e backup">
                     <span class="ico w-4 h-4" data-icon="settings"></span>
                 </button>
@@ -230,8 +231,8 @@
 
             <div class="space-y-2 border-t border-slate-100 pt-4">
                 <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Firebase (opzionale)</h4>
-                <p class="text-xs text-slate-500">La configurazione viene memorizzata, ma la sincronizzazione in tempo reale non è ancora collegata.</p>
-                <textarea id="firebase-config-input" rows="5" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='{"apiKey": "...", "projectId": "..."}'></textarea>
+                <p class="text-xs text-slate-500">Incolla la configurazione web app del tuo progetto (oppure scrivila nella costante FIREBASE_CONFIG in cima allo script del file, così i colleghi non devono farlo).</p>
+                <textarea id="firebase-config-input" rows="5" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "...", ... };'></textarea>
                 <div class="flex justify-end space-x-3">
                     <button onclick="chiudiConfigModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Chiudi</button>
                     <button onclick="salvaConfigFirebase()" class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl">Salva</button>
@@ -240,7 +241,28 @@
         </div>
     </div>
 
+    <!-- Modal login -->
+    <div id="modal-login" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-slate-900">Accedi al team</h3>
+            <p class="text-xs text-slate-500">Usa l'account creato per te nella console Firebase. I dati si sincronizzano in tempo reale.</p>
+            <input type="email" id="login-email" autocomplete="username" placeholder="Email" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="password" id="login-password" autocomplete="current-password" placeholder="Password" onkeydown="if(event.key==='Enter')accedi()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <p id="login-errore" class="text-xs text-rose-600 min-h-[1rem]"></p>
+            <div class="flex items-center justify-between">
+                <button onclick="chiudiLogin()" class="text-xs text-slate-500 hover:underline">Continua in locale</button>
+                <button onclick="accedi()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded-xl text-sm">Accedi</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        /* ===== CONFIGURAZIONE FIREBASE =====
+           Incolla qui l'oggetto firebaseConfig del tuo progetto, ad esempio:
+           const FIREBASE_CONFIG = { apiKey: "...", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..." };
+           Lascia null per lavorare solo in locale. */
+        const FIREBASE_CONFIG = null;
+
         /* ---------- Icone SVG inline (nessuna dipendenza esterna) ---------- */
         const ICONE = {
             'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
@@ -277,7 +299,7 @@
         const GIUST_DEFAULT = [
             { id: 'Ferie',         nome: 'Ferie',         emoji: '🏖️', colore: '#a855f7', fisso: true },
             { id: 'Permesso',      nome: 'Permesso',      emoji: '⏱️', colore: '#3b82f6', fisso: true },
-            { id: 'Malattia',      nome: 'Malattia',      emoji: '🏥', colore: '#f43f5e', fisso: true },
+            { id: 'AltriPermessi', nome: 'Altri permessi', emoji: '📝', colore: '#f59e0b', fisso: true },
             { id: 'Smart Working', nome: 'Smart Working', emoji: '💻', colore: '#10b981', fisso: true }
         ];
         const PALETTE = ['#a855f7','#3b82f6','#f43f5e','#10b981','#f59e0b','#06b6d4','#ec4899','#f97316','#84cc16','#64748b','#14b8a6','#6366f1'];
@@ -292,6 +314,16 @@
         let offsetTempo = 0;
         let colonneCorrenti = [];
         let coloreScelto = PALETTE[4];
+
+        // Migra i vecchi valori "Malattia" nel nuovo giustificativo; restituisce true se ha cambiato qualcosa
+        function migraMalattia(mappa) {
+            let cambiato = false;
+            Object.values(mappa || {}).forEach(giorni => {
+                Object.keys(giorni).forEach(k => { if (giorni[k] === 'Malattia') { giorni[k] = 'AltriPermessi'; cambiato = true; } });
+            });
+            return cambiato;
+        }
+        migraMalattia(pianificazione);
 
         function tuttiGiust() { return GIUST_DEFAULT.concat(giustCustom); }
         function trovaGiust(id) { return tuttiGiust().find(g => g.id === id); }
@@ -375,7 +407,7 @@
         function renderLegenda() {
             const chip = (bg, fg, border, txt) => `<span class="inline-flex items-center px-2.5 py-1 rounded-lg border" style="background:${bg};color:${fg};border-color:${border}">${txt}</span>`;
             let html = '<span class="text-slate-400">Stati:</span>' +
-                chip('#f1f5f9', '#334155', '#e2e8f0', '🏢 Ufficio');
+                chip('#f1f5f9', '#334155', '#e2e8f0', '🏦 Ufficio');
             tuttiGiust().forEach(g => {
                 html += chip(g.colore + '22', g.colore, g.colore + '55', `${esc(g.emoji)} ${esc(g.nome)}`);
             });
@@ -407,7 +439,7 @@
             tbody.innerHTML = colleghi.map((collega, idx) => {
                 const celle = colonneCorrenti.map(g => {
                     const gi = trovaGiust(giustificativoDelGiorno(collega, g.dataKey));
-                    let style = '', contenuto = '<span class="text-slate-400">-</span>', title = 'Ufficio';
+                    let style = '', contenuto = mese ? '<span class="text-sm leading-none">🏦</span>' : '<span class="mr-1">🏦</span><span class="text-slate-500">Ufficio</span>', title = 'Ufficio';
                     let cls = 'bg-slate-50 border-slate-200 hover:border-slate-300';
                     if (gi) {
                         cls = 'border-transparent text-white font-medium shadow-sm';
@@ -451,7 +483,7 @@
             document.getElementById('modal-title').innerText = `Stato per ${colleghi[idx]}`;
             document.getElementById('modal-subtitle').innerText = `Modifica per il giorno: ${labelGiorno}`;
             let html = `<button onclick="selezionaStatoDaModal('')" class="flex items-center space-x-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm transition-all text-left">
-                <span class="w-3 h-3 rounded-full bg-slate-300"></span><span>🏢 In Ufficio (Standard)</span></button>`;
+                <span class="w-3 h-3 rounded-full bg-slate-300"></span><span>🏦 In Ufficio (Standard)</span></button>`;
             tuttiGiust().forEach(g => {
                 html += `<button onclick="selezionaStatoDaModal('${g.id}')" class="flex items-center space-x-3 p-3 rounded-2xl border font-medium text-sm transition-all text-left hover:brightness-95"
                     style="background:${g.colore}1a;border-color:${g.colore}55;color:${g.colore}">
@@ -580,16 +612,21 @@
         }
 
         /* ---------- Persistenza ---------- */
-        function salvaTutto(conAvviso) {
+        function salvaLocale() {
             try {
                 localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
                 localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
                 localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
                 localStorage.setItem('team_giustificativi', JSON.stringify(giustCustom));
-                if (conAvviso) alert('Dati salvati con successo!');
-            } catch (e) {
-                alert('Impossibile salvare: il browser ha bloccato lo storage locale.');
-            }
+                return true;
+            } catch (e) { return false; }
+        }
+
+        function salvaTutto(conAvviso) {
+            const ok = salvaLocale();
+            programmaSalvataggioRemoto();
+            if (!ok) alert('Impossibile salvare in locale: il browser ha bloccato lo storage.');
+            else if (conAvviso) alert(utenteCorrente ? 'Dati salvati e sincronizzati.' : 'Dati salvati con successo!');
         }
 
         function aggiungiCollega() {
@@ -622,12 +659,19 @@
         function chiudiConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
 
         function salvaConfigFirebase() {
-            const val = document.getElementById('firebase-config-input').value.trim();
+            const raw = document.getElementById('firebase-config-input').value.trim();
             try {
-                localStorage.setItem('firebase_config_json', JSON.stringify(JSON.parse(val)));
-                chiudiConfigModal();
-                alert('Configurazione salvata!');
-            } catch (e) { alert('JSON non valido (usa le virgolette doppie sulle chiavi).'); }
+                const i = raw.indexOf('{'), j = raw.lastIndexOf('}');
+                if (i < 0 || j < i) throw new Error('no-object');
+                const t = raw.slice(i, j + 1)
+                    .replace(/^\s*\/\/.*$/gm, '')
+                    .replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":')
+                    .replace(/,\s*}/g, '}');
+                const cfg = JSON.parse(t);
+                if (!cfg.apiKey || !cfg.projectId) throw new Error('missing');
+                localStorage.setItem('firebase_config_json', JSON.stringify(cfg));
+                location.reload();
+            } catch (e) { alert('Configurazione non riconosciuta. Incolla tutto il blocco firebaseConfig copiato dalla console.'); }
         }
 
         function esportaDati() {
@@ -664,10 +708,121 @@
             ev.target.value = '';
         }
 
+        /* ---------- Firebase (Auth + Firestore) ---------- */
+        let db = null, auth = null, utenteCorrente = null, unsubRemoto = null, timerRemoto = null, statoSync = 'locale';
+
+        function configFirebase() { return FIREBASE_CONFIG || leggi('firebase_config_json', null); }
+
+        function statoBadge(stato) {
+            statoSync = stato;
+            const map = {
+                locale: ['bg-amber-50 text-amber-700 border-amber-200', 'bg-amber-500', 'Locale'],
+                login:  ['bg-sky-50 text-sky-700 border-sky-200', 'bg-sky-500', 'Accedi'],
+                online: ['bg-emerald-50 text-emerald-700 border-emerald-200', 'bg-emerald-500', 'Sincronizzato'],
+                errore: ['bg-rose-50 text-rose-700 border-rose-200', 'bg-rose-500', 'Errore sync']
+            };
+            const [c, dot, txt] = map[stato];
+            const el = document.getElementById('firebase-status');
+            el.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ' + c;
+            el.innerHTML = '<span class="w-2 h-2 mr-1.5 ' + dot + ' rounded-full"></span>' + txt;
+        }
+
+        function clickBadge() {
+            if (!auth) { apriConfigModal(); return; }
+            if (utenteCorrente) {
+                if (confirm('Uscire dall\'account ' + (utenteCorrente.email || '') + '?')) auth.signOut();
+            } else apriLogin();
+        }
+
+        function apriLogin() { document.getElementById('modal-login').classList.remove('hidden'); }
+        function chiudiLogin() { document.getElementById('modal-login').classList.add('hidden'); }
+
+        function accedi() {
+            const email = document.getElementById('login-email').value.trim();
+            const pw = document.getElementById('login-password').value;
+            const err = document.getElementById('login-errore');
+            err.innerText = '';
+            if (!email || !pw) { err.innerText = 'Inserisci email e password.'; return; }
+            auth.signInWithEmailAndPassword(email, pw).catch(e => {
+                const m = {
+                    'auth/invalid-credential': 'Email o password errate.',
+                    'auth/invalid-email': 'Email non valida.',
+                    'auth/too-many-requests': 'Troppi tentativi: riprova tra qualche minuto.',
+                    'auth/network-request-failed': 'Connessione assente.',
+                    'auth/operation-not-allowed': 'Accesso Email/Password non abilitato nella console Firebase.',
+                    'auth/unauthorized-domain': 'Dominio non autorizzato: aggiungilo in Authentication > Impostazioni.'
+                };
+                err.innerText = m[e.code] || ('Errore: ' + e.code);
+            });
+        }
+
+        function avviaFirebase() {
+            const cfg = configFirebase();
+            if (!cfg || typeof firebase === 'undefined') { statoBadge('locale'); return; }
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(cfg);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                statoBadge('login');
+                auth.onAuthStateChanged(u => {
+                    utenteCorrente = u;
+                    if (u) { chiudiLogin(); ascoltaRemoto(); }
+                    else {
+                        if (unsubRemoto) { unsubRemoto(); unsubRemoto = null; }
+                        statoBadge('login');
+                        apriLogin();
+                    }
+                });
+            } catch (e) { console.error(e); statoBadge('errore'); }
+        }
+
+        function datiCorrenti() {
+            return JSON.stringify({ colleghi, pianificazione, pianoFerie2027, giustificativi: giustCustom });
+        }
+
+        function ascoltaRemoto() {
+            if (unsubRemoto) unsubRemoto();
+            const ref = db.collection('presenze').doc('team');
+            unsubRemoto = ref.onSnapshot(snap => {
+                if (snap.metadata.hasPendingWrites) return;
+                if (!snap.exists) { salvaRemoto(); return; } // primo avvio: carica i dati locali
+                try {
+                    const d = JSON.parse(snap.data().dati);
+                    colleghi = d.colleghi || [];
+                    pianificazione = d.pianificazione || {};
+                    pianoFerie2027 = d.pianoFerie2027 || [];
+                    giustCustom = d.giustificativi || [];
+                    const migrato = migraMalattia(pianificazione);
+                    salvaLocale();
+                    if (migrato) programmaSalvataggioRemoto();
+                    aggiornaVistaTempo();
+                    aggiornaSelectFerieColleghi();
+                    renderTabellaFerie2027();
+                    statoBadge('online');
+                } catch (e) { console.error(e); statoBadge('errore'); }
+            }, err => { console.error(err); statoBadge('errore'); });
+        }
+
+        function programmaSalvataggioRemoto() {
+            if (!db || !utenteCorrente) return;
+            clearTimeout(timerRemoto);
+            timerRemoto = setTimeout(salvaRemoto, 400);
+        }
+
+        function salvaRemoto() {
+            if (!db || !utenteCorrente) return;
+            db.collection('presenze').doc('team').set({
+                dati: datiCorrenti(),
+                aggiornatoDa: utenteCorrente.email || '',
+                aggiornato: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => statoBadge('online')).catch(e => { console.error(e); statoBadge('errore'); });
+        }
+
         /* ---------- Avvio ---------- */
         window.addEventListener('DOMContentLoaded', () => {
             idratIcone();
             aggiornaVistaTempo();
+            avviaFirebase();
         });
     </script>
 </body>
