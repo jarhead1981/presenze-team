@@ -39,7 +39,7 @@
                 <span id="firebase-status" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
                     <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> Locale
                 </span>
-                <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl text-sm transition-colors" title="Configura Firebase">
+                <button onclick="apriConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl text-sm transition-colors" title="Impostazioni">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -89,21 +89,16 @@
                             <span>Aggiungi</span>
                         </button>
                     </div>
-                    <button onclick="salvaTutto()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
+                    <button onclick="salvaTutto(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
                         <i data-lucide="save" class="w-4 h-4"></i>
                         <span>Salva</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Legenda Stati -->
-            <div class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600">
-                <span class="text-slate-400">Stati:</span>
-                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">🏢 Ufficio</span>
-                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 border border-purple-200">🏖️ Ferie</span>
-                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-100 text-blue-700 border border-blue-200">⏱️ Permesso</span>
-                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200">🏥 Malattia</span>
-                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">💻 Smart Working</span>
+            <!-- Legenda Stati Dinamica -->
+            <div id="legenda-container" class="flex flex-wrap items-center gap-3 px-2 text-xs font-medium text-slate-600">
+                <!-- Generato via JS -->
             </div>
 
             <!-- Timeline / Tabella Principale -->
@@ -133,7 +128,7 @@
                     </div>
                     <h2 class="text-2xl font-bold text-slate-900">Piano Ferie 2027</h2>
                 </div>
-                <button onclick="salvaTutto()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
+                <button onclick="salvaTutto(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
                     <i data-lucide="save" class="w-4 h-4"></i>
                     <span>Salva Piano Ferie</span>
                 </button>
@@ -195,40 +190,86 @@
             </div>
             <p id="modal-subtitle" class="text-xs text-slate-500">Seleziona lo stato per questo giorno:</p>
             
-            <div class="grid grid-cols-1 gap-2.5 pt-2">
-                <button onclick="selezionaStatoDaModal('')" class="flex items-center space-x-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm transition-all text-left">
-                    <span class="w-3 h-3 rounded-full bg-slate-300"></span>
-                    <span>🏢 In Ufficio (Standard)</span>
-                </button>
-                <button onclick="selezionaStatoDaModal('Ferie')" class="flex items-center space-x-3 p-3 rounded-2xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium text-sm transition-all text-left">
-                    <span class="w-3 h-3 rounded-full bg-purple-500"></span>
-                    <span>🏖️ Ferie</span>
-                </button>
-                <button onclick="selezionaStatoDaModal('Permesso')" class="flex items-center space-x-3 p-3 rounded-2xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium text-sm transition-all text-left">
-                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                    <span>⏱️ Permesso</span>
-                </button>
-                <button onclick="selezionaStatoDaModal('Malattia')" class="flex items-center space-x-3 p-3 rounded-2xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium text-sm transition-all text-left">
-                    <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                    <span>🏥 Malattia</span>
-                </button>
-                <button onclick="selezionaStatoDaModal('Smart Working')" class="flex items-center space-x-3 p-3 rounded-2xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-sm transition-all text-left">
-                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                    <span>💻 Smart Working</span>
-                </button>
+            <div id="modal-stati-list" class="grid grid-cols-1 gap-2.5 pt-2">
+                <!-- Generato dinamicamente in base ai giustificativi configurati -->
             </div>
         </div>
     </div>
 
-    <!-- Modal Configurazione Firebase -->
+    <!-- Modal Impostazioni & Configurazione -->
     <div id="config-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-slate-900">Configurazione Firebase (Opzionale)</h3>
-            <p class="text-xs text-slate-500">Incolla qui la configurazione JSON di Firebase per sincronizzare in tempo reale.</p>
-            <textarea id="firebase-config-input" rows="6" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='{ apiKey: "...", projectId: "..." }'></textarea>
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Impostazioni Applicazione</h3>
+                    <p class="text-xs text-slate-500">Gestisci i giustificativi con icone e la sincronizzazione.</p>
+                </div>
+                <button onclick="chiudiConfigModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Sezione 1: Gestione Giustificativi -->
+            <div class="space-y-4">
+                <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+                    <i data-lucide="tag" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Personalizza Giustificativi e Stati</span>
+                </h4>
+                
+                <div id="lista-giustificativi-config" class="space-y-2">
+                    <!-- Popolato via JS -->
+                </div>
+
+                <!-- Form Aggiunta Nuovo Giustificativo -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nome</label>
+                        <input type="text" id="nuovo-giust-nome" placeholder="Es. Formazione" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Icona (Lucide)</label>
+                        <select id="nuovo-giust-icona" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                            <option value="sun">Sun (Sole)</option>
+                            <option value="clock">Clock (Orologio)</option>
+                            <option value="thermometer">Thermometer (Malattia)</option>
+                            <option value="laptop">Laptop (Smart)</option>
+                            <option value="briefcase">Briefcase (Lavoro)</option>
+                            <option value="calendar">Calendar (Calendario)</option>
+                            <option value="coffee">Coffee (Pausa)</option>
+                            <option value="plane">Plane (Viaggio)</option>
+                            <option value="shield">Shield (Protezione)</option>
+                            <option value="award">Award (Premio)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Colore Tema</label>
+                        <select id="nuovo-giust-colore" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                            <option value="purple">Viola (Ferie)</option>
+                            <option value="blue">Blu (Permesso)</option>
+                            <option value="rose">Rosa/Rosso (Malattia)</option>
+                            <option value="emerald">Verde (Smart)</option>
+                            <option value="amber">Ambra / Arancio</option>
+                            <option value="indigo">Indaco</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button onclick="aggiungiGiustificativo()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-xl text-xs transition-all shadow-sm">
+                            Aggiungi
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sezione 2: Configurazione Firebase -->
+            <div class="space-y-3 pt-4 border-t border-slate-100">
+                <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+                    <i data-lucide="cloud" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Configurazione Firebase (Opzionale)</span>
+                </h4>
+                <textarea id="firebase-config-input" rows="4" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none" placeholder='{ apiKey: "...", projectId: "..." }'></textarea>
+            </div>
+
             <div class="flex justify-end space-x-3 pt-2">
-                <button onclick="chiudiModalStato()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Annulla</button>
-                <button onclick="salvaConfigFirebase()" class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl">Salva</button>
+                <button onclick="chiudiConfigModal()" class="px-5 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-xl font-medium">Annulla</button>
+                <button onclick="salvaImpostazioniGenerali()" class="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md">Salva Modifiche</button>
             </div>
         </div>
     </div>
@@ -241,9 +282,30 @@
         let pianificazione = JSON.parse(localStorage.getItem('team_pianificazione')) || {};
         let pianoFerie2027 = JSON.parse(localStorage.getItem('team_ferie_2027')) || [];
 
+        // Giustificativi predefiniti personalizzabili
+        let giustificativi = JSON.parse(localStorage.getItem('team_giustificativi')) || [
+            { id: 'Ferie', label: 'Ferie', icon: 'sun', color: 'purple' },
+            { id: 'Permesso', label: 'Permesso', icon: 'clock', color: 'blue' },
+            { id: 'Malattia', label: 'Malattia', icon: 'thermometer', color: 'rose' },
+            { id: 'Smart Working', label: 'Smart Working', icon: 'laptop', color: 'emerald' }
+        ];
+
+        let ufficioConfig = JSON.parse(localStorage.getItem('team_ufficio_config')) || { label: 'Ufficio / Banca', icon: 'landmark', color: 'indigo' };
+
         let cellaAttiva = { collega: '', dataKey: '' };
         let vistaCorrente = 'settimana'; // 'settimana' o 'mese'
         let offsetTempo = 0; // Offset settimane o mesi
+
+        function getColorClasses(color) {
+            switch(color) {
+                case 'purple': return { badge: 'bg-purple-500 text-white', border: 'border-purple-200', bgHover: 'bg-purple-50 hover:bg-purple-100 text-purple-700', dot: 'bg-purple-500', lightBg: 'bg-purple-50 text-purple-700 border-purple-200' };
+                case 'blue': return { badge: 'bg-blue-500 text-white', border: 'border-blue-200', bgHover: 'bg-blue-50 hover:bg-blue-100 text-blue-700', dot: 'bg-blue-500', lightBg: 'bg-blue-50 text-blue-700 border-blue-200' };
+                case 'rose': return { badge: 'bg-rose-500 text-white', border: 'border-rose-200', bgHover: 'bg-rose-50 hover:bg-rose-100 text-rose-700', dot: 'bg-rose-500', lightBg: 'bg-rose-50 text-rose-700 border-rose-200' };
+                case 'emerald': return { badge: 'bg-emerald-500 text-white', border: 'border-emerald-200', bgHover: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', lightBg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+                case 'amber': return { badge: 'bg-amber-500 text-white', border: 'border-amber-200', bgHover: 'bg-amber-50 hover:bg-amber-100 text-amber-700', dot: 'bg-amber-500', lightBg: 'bg-amber-50 text-amber-700 border-amber-200' };
+                case 'indigo': default: return { badge: 'bg-indigo-600 text-white', border: 'border-indigo-200', bgHover: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700', dot: 'bg-indigo-600', lightBg: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
+            }
+        }
 
         function mostraTab(tab) {
             if(tab === 'timeline') {
@@ -288,7 +350,7 @@
 
         function getColonnaGiorni() {
             let giorni = [];
-            let mesiNomi = ['Gennaio', Feb = 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            let mesiNomi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
             let mesiBrevi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
             let nomiGiorniBrevi = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
 
@@ -314,7 +376,6 @@
                 document.getElementById('label-periodo-corrente').innerText = `${primo} — ${ultimo}`;
 
             } else {
-                // Vista Mensile
                 let dataBase = new Date();
                 dataBase.setMonth(dataBase.getMonth() + offsetTempo);
                 let anno = dataBase.getFullYear();
@@ -325,7 +386,6 @@
                 let giorniNelMese = new Date(anno, mese + 1, 0).getDate();
                 for (let giorno = 1; giorno <= giorniNelMese; giorno++) {
                     let d = new Date(anno, mese, giorno);
-                    // Escludi Sabato (6) e Domenica (0) se vuoi mostrare solo lavorativi, oppure includili tutti
                     if (d.getDay() !== 0 && d.getDay() !== 6) {
                         let dataKey = d.toISOString().split('T')[0];
                         let nomeBreveGiorno = nomiGiorniBrevi[d.getDay()];
@@ -345,6 +405,7 @@
             colonneCorrenti = getColonnaGiorni();
             renderHeader();
             renderTimeline();
+            renderLegenda();
         }
 
         function cambiaTempo(direzione) {
@@ -359,6 +420,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             aggiornaVistaTempo();
+            renderLegenda();
         });
 
         function renderHeader() {
@@ -369,6 +431,27 @@
                 ${thCols}
                 <th class="py-4 px-3 text-center w-16">Azioni</th>
             `;
+        }
+
+        function renderLegenda() {
+            const container = document.getElementById('legenda-container');
+            let uClasses = getColorClasses(ufficioConfig.color);
+            let html = `
+                <span class="text-slate-400">Stati:</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg ${uClasses.lightBg} border">
+                    <i data-lucide="${ufficioConfig.icon}" class="w-3.5 h-3.5 mr-1 inline"></i> ${ufficioConfig.label}
+                </span>
+            `;
+            html += giustificativi.map(g => {
+                let c = getColorClasses(g.color);
+                return `
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg ${c.lightBg} border">
+                        <i data-lucide="${g.icon}" class="w-3.5 h-3.5 mr-1 inline"></i> ${g.label}
+                    </span>
+                `;
+            }).join('');
+            container.innerHTML = html;
+            lucide.createIcons();
         }
 
         function renderTimeline() {
@@ -383,25 +466,35 @@
                 if (!pianificazione[collega]) pianificazione[collega] = {};
 
                 let celleGiorni = colonneCorrenti.map(g => {
-                    let giust = pianificazione[collega][g.dataKey] || '';
-                    if(!giust) {
-                        // Verifica corretta nell'intervallo esatto del piano ferie
+                    let giustId = pianificazione[collega][g.dataKey] || '';
+                    if(!giustId) {
                         let inFerie = pianoFerie2027.some(f => f.collega === collega && g.dataKey >= f.dataInizio && g.dataKey <= f.dataFine);
-                        if(inFerie) giust = 'Ferie';
+                        if(inFerie) giustId = 'Ferie';
                     }
                     
-                    let styleClass = "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300";
-                    let testo = "Ufficio";
+                    let styleClass = "bg-indigo-50/60 text-indigo-700 border-indigo-200 hover:border-indigo-300";
+                    let contenutoHtml = `<i data-lucide="${ufficioConfig.icon}" class="w-3.5 h-3.5"></i>`;
+                    let titleTooltip = ufficioConfig.label;
 
-                    if(giust === 'Ferie') { styleClass = "bg-purple-500 text-white font-medium shadow-sm border-transparent"; testo = "Ferie"; }
-                    else if(giust === 'Permesso') { styleClass = "bg-blue-500 text-white font-medium shadow-sm border-transparent"; testo = "Permesso"; }
-                    else if(giust === 'Malattia') { styleClass = "bg-rose-500 text-white font-medium shadow-sm border-transparent"; testo = "Malattia"; }
-                    else if(giust === 'Smart Working') { styleClass = "bg-emerald-500 text-white font-medium shadow-sm border-transparent"; testo = "Smart"; }
+                    if (giustId) {
+                        let matchGiust = giustificativi.find(item => item.id === giustId || item.label === giustId);
+                        if (matchGiust) {
+                            let c = getColorClasses(matchGiust.color);
+                            styleClass = `${c.badge} border-transparent shadow-sm`;
+                            contenutoHtml = `<span class="truncate">${matchGiust.label.substring(0, 6)}</span>`;
+                            titleTooltip = matchGiust.label;
+                        } else {
+                            // Fallback per vecchi valori salvati
+                            styleClass = "bg-purple-500 text-white font-medium shadow-sm border-transparent";
+                            contenutoHtml = `<span class="truncate">${giustId.substring(0, 5)}</span>`;
+                            titleTooltip = giustId;
+                        }
+                    }
 
                     return `
                         <td class="py-3 px-1 text-center">
-                            <button onclick="apriModalStato('${collega}', '${g.dataKey}', '${g.label}')" class="w-full py-2 px-1 rounded-xl border text-[11px] transition-all flex items-center justify-center cursor-pointer ${styleClass}" title="${testo}">
-                                <span class="truncate">${testo === 'Ufficio' ? '-' : testo.substring(0, 5)}</span>
+                            <button onclick="apriModalStato('${collega}', '${g.dataKey}', '${g.label}')" class="w-full py-2 px-1 rounded-xl border text-[11px] transition-all flex items-center justify-center cursor-pointer ${styleClass}" title="${titleTooltip}">
+                                ${contenutoHtml}
                             </button>
                         </td>
                     `;
@@ -437,7 +530,30 @@
             cellaAttiva = { collega, dataKey };
             document.getElementById('modal-title').innerText = `Stato per ${collega}`;
             document.getElementById('modal-subtitle').innerText = `Modifica per il giorno: ${labelGiorno}`;
+            
+            const listContainer = document.getElementById('modal-stati-list');
+            let uClasses = getColorClasses(ufficioConfig.color);
+            
+            let html = `
+                <button onclick="selezionaStatoDaModal('')" class="flex items-center space-x-3 p-3 rounded-2xl border ${uClasses.border} ${uClasses.bgHover} font-medium text-sm transition-all text-left">
+                    <span class="w-4 h-4 flex items-center justify-center"><i data-lucide="${ufficioConfig.icon}" class="w-4 h-4"></i></span>
+                    <span>${ufficioConfig.label} (Standard)</span>
+                </button>
+            `;
+
+            html += giustificativi.map(g => {
+                let c = getColorClasses(g.color);
+                return `
+                    <button onclick="selezionaStatoDaModal('${g.label}')" class="flex items-center space-x-3 p-3 rounded-2xl border ${c.border} ${c.bgHover} font-medium text-sm transition-all text-left">
+                        <span class="w-4 h-4 flex items-center justify-center"><i data-lucide="${g.icon}" class="w-4 h-4"></i></span>
+                        <span>${g.label}</span>
+                    </button>
+                `;
+            }).join('');
+
+            listContainer.innerHTML = html;
             document.getElementById('modal-stato').classList.remove('hidden');
+            lucide.createIcons();
         }
 
         function chiudiModalStato() {
@@ -472,7 +588,7 @@
             }
 
             pianoFerie2027.push({ id: Date.now(), collega, dataInizio, dataFine });
-            salvaTutto();
+            salvaTutto(false);
             renderTabellaFerie2027();
             renderTimeline();
             alert('Periodo di ferie 2027 aggiunto con successo!');
@@ -480,7 +596,7 @@
 
         function rimuoviPeriodoFerie2027(id) {
             pianoFerie2027 = pianoFerie2027.filter(f => f.id !== id);
-            salvaTutto();
+            salvaTutto(false);
             renderTabellaFerie2027();
             renderTimeline();
         }
@@ -507,11 +623,15 @@
             lucide.createIcons();
         }
 
-        function salvaTutto() {
+        function salvaTutto(mostraAlert = true) {
             localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
             localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
             localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
-            alert('Dati salvati con successo!');
+            localStorage.setItem('team_giustificativi', JSON.stringify(giustificativi));
+            localStorage.setItem('team_ufficio_config', JSON.stringify(ufficioConfig));
+            if(mostraAlert) {
+                alert('Dati salvati con successo!');
+            }
         }
 
         function aggiungiCollega() {
@@ -522,7 +642,7 @@
 
             colleghi.push(nome);
             input.value = '';
-            salvaTutto();
+            salvaTutto(false);
             renderTimeline();
             aggiornaSelectFerieColleghi();
         }
@@ -533,23 +653,77 @@
                 colleghi = colleghi.filter(c => c !== nome);
                 delete pianificazione[nome];
                 pianoFerie2027 = pianoFerie2027.filter(f => f.collega !== nome);
-                salvaTutto();
+                salvaTutto(false);
                 renderTimeline();
                 aggiornaSelectFerieColleghi();
             }
         }
 
-        // Config Firebase
-        function apriConfigModal() { document.getElementById('config-modal').classList.add('hidden'); document.getElementById('config-modal').classList.remove('hidden'); }
-        function chiudiConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
-        function salvaConfigFirebase() {
-            const val = document.getElementById('firebase-config-input').value.trim();
-            try {
-                const cfg = JSON.parse(val);
-                localStorage.setItem('firebase_config_json', JSON.stringify(cfg));
-                chiudiConfigModal();
-                alert('Configurazione salvata!');
-            } catch(e) { alert('JSON non valido'); }
+        // Gestione Impostazioni & Giustificativi
+        function apriConfigModal() { 
+            renderGiustificativiConfigList();
+            document.getElementById('config-modal').classList.remove('hidden'); 
+            lucide.createIcons();
+        }
+        function chiudiConfigModal() { 
+            document.getElementById('config-modal').classList.add('hidden'); 
+        }
+
+        function renderGiustificativiConfigList() {
+            const container = document.getElementById('lista-giustificativi-config');
+            container.innerHTML = giustificativi.map((g, idx) => `
+                <div class="flex items-center justify-between bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="${g.icon}" class="w-4 h-4 text-indigo-600"></i>
+                        <span class="font-bold text-slate-800">${g.label}</span>
+                        <span class="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-200 text-slate-600">${g.color}</span>
+                    </div>
+                    <button onclick="rimuoviGiustificativo(${idx})" class="text-slate-400 hover:text-rose-600 p-1 transition-colors" title="Elimina">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function aggiungiGiustificativo() {
+            const nomeInput = document.getElementById('nuovo-giust-nome');
+            const iconSelect = document.getElementById('nuovo-giust-icona');
+            const coloreSelect = document.getElementById('nuovo-giust-colore');
+
+            const nome = nomeInput.value.trim();
+            if(!nome) { alert('Inserisci un nome per il giustificativo'); return; }
+
+            giustificativi.push({
+                id: nome,
+                label: nome,
+                icon: iconSelect.value,
+                color: coloreSelect.value
+            });
+
+            nomeInput.value = '';
+            renderGiustificativiConfigList();
+        }
+
+        function rimuoviGiustificativo(index) {
+            giustificativi.splice(index, 1);
+            renderGiustificativiConfigList();
+        }
+
+        function salvaImpostazioniGenerali() {
+            const valFirebase = document.getElementById('firebase-config-input').value.trim();
+            if(valFirebase) {
+                try {
+                    const cfg = JSON.parse(valFirebase);
+                    localStorage.setItem('firebase_config_json', JSON.stringify(cfg));
+                } catch(e) { alert('JSON Firebase non valido'); return; }
+            }
+
+            salvaTutto(false);
+            chiudiConfigModal();
+            renderTimeline();
+            renderLegenda();
+            alert('Impostazioni salvate con successo!');
         }
     </script>
 </body>
