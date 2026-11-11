@@ -84,17 +84,11 @@
                     <h2 class="text-2xl font-bold text-slate-900">Pianificazione Team</h2>
                 </div>
 
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
-                        <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="bg-transparent px-3 py-1.5 text-sm focus:outline-none w-40 sm:w-48">
-                        <button onclick="aggiungiCollega()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 whitespace-nowrap">
-                            <i data-lucide="user-plus" class="w-4 h-4"></i>
-                            <span>Aggiungi</span>
-                        </button>
-                    </div>
-                    <button onclick="salvaTutto(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
-                        <i data-lucide="save" class="w-4 h-4"></i>
-                        <span>Salva</span>
+                <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
+                    <input type="text" id="nuovo-collega-nome" placeholder="Nuovo collega..." class="bg-transparent px-3 py-1.5 text-sm focus:outline-none w-40 sm:w-48">
+                    <button onclick="aggiungiCollega()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 whitespace-nowrap">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>Aggiungi</span>
                     </button>
                 </div>
             </div>
@@ -131,10 +125,6 @@
                     </div>
                     <h2 class="text-2xl font-bold text-slate-900">Piano Ferie 2027</h2>
                 </div>
-                <button onclick="salvaTutto(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-100 flex items-center justify-center space-x-2">
-                    <i data-lucide="save" class="w-4 h-4"></i>
-                    <span>Salva Piano Ferie</span>
-                </button>
             </div>
 
             <!-- Form Inserimento Periodo Ferie 2027 -->
@@ -298,20 +288,17 @@
         let vistaCorrente = 'settimana';
         let offsetTempo = 0;
 
-        // Configurazione Firebase integrata direttamente nel codice
         const defaultFirebaseConfig = {
-            apiKey: "AIzaSyBiLLvxM0Cxyp1E-3lSyrkKmsdCgcev65A",
-            authDomain: "presenze-team-9ec9f.firebaseapp.com",
-            databaseURL: "https://presenze-team-9ec9f-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "presenze-team-9ec9f",
-            storageBucket: "presenze-team-9ec9f.firebasestorage.app",
-            messagingSenderId: "850301455307",
-            appId: "1:850301455307:web:b3865df381e3e9a205844e"
+            apiKey: "AIzaSyDemoKeyPresenzeTeam2026",
+            authDomain: "presenzeteam-demo.firebaseapp.com",
+            projectId: "presenzeteam-demo",
+            storageBucket: "presenzeteam-demo.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
         };
 
         function initFirebase() {
             try {
-                // Usa la configurazione salvata se esiste, altrimenti quella di default
                 let configStr = localStorage.getItem('firebase_config_json');
                 let firebaseConfig = configStr ? JSON.parse(configStr) : defaultFirebaseConfig;
 
@@ -601,7 +588,7 @@
             pianificazione[cellaAttiva.collega][cellaAttiva.dataKey] = valore;
             chiudiModalStato();
             renderTimeline();
-            salvaTutto(false);
+            salvaAutomatico(); // Salvataggio automatico senza alert
         }
 
         // Gestione Piano Ferie 2027
@@ -625,15 +612,14 @@
             }
 
             pianoFerie2027.push({ id: Date.now(), collega, dataInizio, dataFine });
-            salvaTutto(false);
+            salvaAutomatico();
             renderTabellaFerie2027();
             renderTimeline();
-            alert('Periodo di ferie 2027 aggiunto con successo!');
         }
 
         function rimuoviPeriodoFerie2027(id) {
             pianoFerie2027 = pianoFerie2027.filter(f => f.id !== id);
-            salvaTutto(false);
+            salvaAutomatico();
             renderTabellaFerie2027();
             renderTimeline();
         }
@@ -660,8 +646,8 @@
             lucide.createIcons();
         }
 
-        // Funzione unificata di salvataggio (Locale + Firebase)
-        async function salvaTutto(mostraAlert = true) {
+        // Salvataggio automatico in background senza popup fastidiosi
+        async function salvaAutomatico() {
             localStorage.setItem('team_colleghi', JSON.stringify(colleghi));
             localStorage.setItem('team_pianificazione', JSON.stringify(pianificazione));
             localStorage.setItem('team_ferie_2027', JSON.stringify(pianoFerie2027));
@@ -678,17 +664,9 @@
                         ufficioConfig,
                         aggiornatoIl: new Date().toISOString()
                     });
-                    if(mostraAlert) alert('Dati salvati e sincronizzati su Firebase con successo!');
-                    return;
                 } catch (error) {
-                    console.error("Errore salvataggio su Firestore: ", error);
-                    if(mostraAlert) alert('Errore di sincronizzazione cloud. Dati salvati in locale.');
-                    return;
+                    console.error("Errore salvataggio automatico su Firestore: ", error);
                 }
-            }
-
-            if(mostraAlert) {
-                alert('Dati salvati con successo!');
             }
         }
 
@@ -722,7 +700,7 @@
 
             colleghi.push(nome);
             input.value = '';
-            salvaTutto(false);
+            salvaAutomatico();
             renderTimeline();
             aggiornaSelectFerieColleghi();
         }
@@ -733,7 +711,7 @@
                 colleghi = colleghi.filter(c => c !== nome);
                 delete pianificazione[nome];
                 pianoFerie2027 = pianoFerie2027.filter(f => f.collega !== nome);
-                salvaTutto(false);
+                salvaAutomatico();
                 renderTimeline();
                 aggiornaSelectFerieColleghi();
             }
@@ -788,11 +766,13 @@
 
             nomeInput.value = '';
             renderGiustificativiConfigList();
+            salvaAutomatico();
         }
 
         function rimuoviGiustificativo(index) {
             giustificativi.splice(index, 1);
             renderGiustificativiConfigList();
+            salvaAutomatico();
         }
 
         function salvaImpostazioniGenerali() {
@@ -806,12 +786,11 @@
                 localStorage.removeItem('firebase_config_json');
             }
 
-            salvaTutto(false);
+            salvaAutomatico();
             chiudiConfigModal();
             initFirebase();
             renderTimeline();
             renderLegenda();
-            alert('Impostazioni salvate con successo!');
         }
     </script>
 </body>
